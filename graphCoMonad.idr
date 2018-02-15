@@ -10,11 +10,13 @@ Graph =
     DPair (List v) $ \vs =>
     Rel v
 
+data MyGraph = MkG Graph
+
 IntGraph : Graph
 IntGraph = (Nat ** [0,1,2,3,4,5,6,7] ** (\(x,y) => x<y))
 
-data Gmorph : Graph -> Graph -> Type where
-    Gmor : (t1 -> t2) -> ((t1,t1) -> Bool) -> Gmorph (t1 ** v1 ** e1) (t2 ** v2 ** e2)
+data Gmorph : MyGraph -> MyGraph -> Type where
+    Gmor : (t1 -> t2) -> ((t1,t1) -> Bool) -> Gmorph (MkG (t1 ** v1 ** e1)) (MkG (t2 ** v2 ** e2))
 
 -- Gapp : Gmorph g1 (v2 ** _ ** _) -> (g1:Graph) -> Graph
 -- Gapp (Gmor vmap emap) (t ** vs ** es) = 
@@ -22,7 +24,7 @@ data Gmorph : Graph -> Graph -> Type where
 --     map (\(n,es) => (n, map (\(u,v) => (vmap u, vmap v)) (filter (emap n) es))) ess
 --     )
 
-Gid : Gmorph (t1 ** v1 ** e1) (t1 ** v1 ** e1)
+Gid : Gmorph (MkG (t1 ** v1 ** e1)) (MkG (t1 ** v1 ** e1))
 Gid = Gmor (\x => x) (\e => True)
 
 infixr 9 ..
@@ -44,7 +46,7 @@ interface MyCategory (obj: Type) where
     id  : {p:obj} -> mor p p
     (.) : {a:obj} -> {b:obj} -> {c:obj} -> mor b c -> mor a b -> mor a c
 
-MyCategory Graph where
-    mor = GMorph
+MyCategory MyGraph where
+    mor = Gmorph
     id = Gid
     (.) = (..)

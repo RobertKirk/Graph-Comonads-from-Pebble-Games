@@ -38,10 +38,13 @@ infixr 9 ..
             False => False
     )
 
-record MyCategory (obj: Type) (mor : obj -> obj -> Type) where
+interface MyCategory (obj: Type) where
     constructor Categ
+    mor : obj -> obj -> Type
     id  : {p:obj} -> mor p p
     (.) : {a:obj} -> {b:obj} -> {c:obj} -> mor b c -> mor a b -> mor a c
 
-GraphCat : MyCategory Graph Gmorph
-GraphCat = Categ Gid (..)
+MyCategory Graph where
+    mor = GMorph
+    id = Gid
+    (.) = (..)

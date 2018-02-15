@@ -11,25 +11,24 @@ Graph =
     Rel v
 
 IntGraph : Graph
-IntGraph = (Nat ** [0,1,2,3,4,5,6,7] ** (\(x,y) => x==y))
+IntGraph = (Nat ** [0,1,2,3,4,5,6,7] ** (\(x,y) => x<y))
 
 data Gmorph : Graph -> Graph -> Type where
-    Gmor : (v1 -> v2) -> ((v1,v1) -> Bool) -> Gmorph (v1 ** _) (v2 ** _)
+    Gmor : (t1 -> t2) -> ((t1,t1) -> Bool) -> Gmorph (t1 ** v1 ** e1) (t2 ** v2 ** e2)
 
-Gapp : Gmorph g1 (v2 ** _ ** _) -> (g1:Graph) -> Graph
+-- Gapp : Gmorph g1 (v2 ** _ ** _) -> (g1:Graph) -> Graph
 -- Gapp (Gmor vmap emap) (t ** vs ** es) = 
 --     (v2 ** (map vmap vs) ** (\(u,v) => )
 --     map (\(n,es) => (n, map (\(u,v) => (vmap u, vmap v)) (filter (emap n) es))) ess
 --     )
 
-
-Gid : Gmorph (v1 ** vs1 ** r1) (v1 ** vs1 ** r1)
-Gid = Gmor id (\e => True)
-
+Gid : Gmorph (t1 ** v1 ** e1) (t1 ** v1 ** e1)
+Gid = Gmor (\x => x) (\e => True)
 
 infixr 9 ..
 
-(..) : Gmorph (v2 ** vs2 ** r2) (v3 ** vs3 ** r3) -> Gmorph (v1 ** vs1 ** r1) (v2 ** vs2** r2) -> Gmorph (v1 ** vs1 ** r1) (v3 ** vs3 ** r3)
+-- (..) : Gmorph (v2 ** vs2 ** r2) (v3 ** vs3 ** r3) -> Gmorph (v1 ** vs1 ** r1) (v2 ** vs2** r2) -> Gmorph (v1 ** vs1 ** r1) (v3 ** vs3 ** r3)
+(..) : Gmorph b1 c1 -> Gmorph a1 b1 -> Gmorph a1 c1
 (..) (Gmor vmap2 emap2) (Gmor vmap1 emap1) =
    Gmor 
     (vmap2 . vmap1)
@@ -39,14 +38,10 @@ infixr 9 ..
             False => False
     )
 
+record MyCategory (obj: Type) (mor : obj -> obj -> Type) where
+    constructor Categ
+    id  : {p:obj} -> mor p p
+    (.) : {a:obj} -> {b:obj} -> {c:obj} -> mor b c -> mor a b -> mor a c
 
--- interface MyCategory (obj : Type) where
---     constructor Categ
---     mor : obj -> obj -> Type
---     id  : mor p p
---     (.) : mor u v -> mor t u -> mor t v
-
--- implementation MyCategory (Graph t) where
---     mor = Gmorph
---     id  = gid
---     (.) = (..)
+GraphCat : MyCategory Graph Gmorph
+GraphCat = Categ Gid (..)

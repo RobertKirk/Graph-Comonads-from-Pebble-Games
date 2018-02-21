@@ -17,18 +17,18 @@ IntGraph = MkG (Nat ** [0,1,2,3,4,5,6,7] ** (\(x,y) => x<y))
 data Gmorph : Graph -> Graph -> Type where
     Gmor : (t1 -> t2) -> ((t1,t1) -> Bool) -> Gmorph (MkG (t1 ** v1 ** e1)) (MkG (t2 ** v2 ** e2))
 
--- Gapp : Gmorph g1 (v2 ** _ ** _) -> (g1:Graph) -> Graph
--- Gapp (Gmor vmap emap) (t ** vs ** es) = 
---     (v2 ** (map vmap vs) ** (\(u,v) => )
---     map (\(n,es) => (n, map (\(u,v) => (vmap u, vmap v)) (filter (emap n) es))) ess
---     )
+-- Gapp : Gmorph (MkG (t1 ** v1 ** e1)) (MkG (t2 ** v2 ** e2)) -> Graph
+-- Gapp (Gmor vmap emap) = 
+--     MkG (t2 ** (map vmap v1) ** (\p =>
+--         elem p edges
+--             where edges = map (\(x,y) => (vmap x, vmap y)) (filter (emap . e1) [(x,y) | x <- v1, y <- v1])
+--     ))
 
 Gid : Gmorph (MkG (t1 ** v1 ** e1)) (MkG (t1 ** v1 ** e1))
 Gid = Gmor (\x => x) (\e => True)
 
 infixr 9 ..
 
--- (..) : Gmorph (v2 ** vs2 ** r2) (v3 ** vs3 ** r3) -> Gmorph (v1 ** vs1 ** r1) (v2 ** vs2** r2) -> Gmorph (v1 ** vs1 ** r1) (v3 ** vs3 ** r3)
 (..) : Gmorph b1 c1 -> Gmorph a1 b1 -> Gmorph a1 c1
 (..) (Gmor vmap2 emap2) (Gmor vmap1 emap1) =
    Gmor 
@@ -62,4 +62,3 @@ interface Functor morph t => Comonad (morph : obj -> obj -> Type) (t : obj -> ob
 interface Category morph => IxComonad (morph : obj -> obj -> Type) (t: k -> obj -> obj) where
     ixcounit : morph (t i o) o
     ixcomultiplication : morph (t i o) (t i (t i o))
-

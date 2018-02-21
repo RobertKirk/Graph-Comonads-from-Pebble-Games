@@ -1,21 +1,20 @@
 module Main
-import Control.Category
 
 Rel : Type -> Type
 Rel t = (t,t) -> Bool
 
-Graph : Type
-Graph =
+Graph' : Type
+Graph' =
     DPair Type $ \v =>
     DPair (List v) $ \vs =>
     Rel v
 
-data MyGraph = MkG Graph
+data Graph = MkG Graph'
 
 IntGraph : Graph
-IntGraph = (Nat ** [0,1,2,3,4,5,6,7] ** (\(x,y) => x<y))
+IntGraph = MkG (Nat ** [0,1,2,3,4,5,6,7] ** (\(x,y) => x<y))
 
-data Gmorph : MyGraph -> MyGraph -> Type where
+data Gmorph : Graph -> Graph -> Type where
     Gmor : (t1 -> t2) -> ((t1,t1) -> Bool) -> Gmorph (MkG (t1 ** v1 ** e1)) (MkG (t2 ** v2 ** e2))
 
 -- Gapp : Gmorph g1 (v2 ** _ ** _) -> (g1:Graph) -> Graph
@@ -40,13 +39,19 @@ infixr 9 ..
             False => False
     )
 
-interface MyCategory (obj: Type) where
+interface Category (mor : obj -> obj -> Type) where
     constructor Categ
-    mor : obj -> obj -> Type
     id  : {p:obj} -> mor p p
     (.) : {a:obj} -> {b:obj} -> {c:obj} -> mor b c -> mor a b -> mor a c
 
-MyCategory MyGraph where
-    mor = Gmorph
-    id = Gid
-    (.) = (..)
+-- MyCategory MyGraph where
+--     mor = Gmorph
+--     id = Gid
+--     (.) = (..)
+
+interface Category morph => Fuctor (morph : obj -> obj -> Type) (f : obj -> obj) where
+    fmap : morph a b -> morph (f a) (f b)
+
+interface Functor mor => Monad (mObj : ob -> ob)  where
+    constructor Mon
+    mmor : {a, b: ob} -> mor a b -> mor (mobj a) (mobj b)

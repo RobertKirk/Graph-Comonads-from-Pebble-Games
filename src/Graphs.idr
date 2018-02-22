@@ -1,6 +1,7 @@
 module Graphs
-
 import src.Categories
+
+%access public export
 
 Rel : Type -> Type
 Rel t = (t,t) -> Bool

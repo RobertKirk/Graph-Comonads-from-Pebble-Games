@@ -17,6 +17,6 @@ interface Functor morph t => Comonad (morph : obj -> obj -> Type) (t : obj -> ob
     counit : morph (t o) o
     comultiplication : morph (t o) (t (t o))
 
-interface Category morph => IxComonad (morph : obj -> obj -> Type) (t: k -> obj -> obj) where
+interface Category morph => IxComonad (morph : obj -> obj -> Type) (t: k -> obj -> obj) | t where
     ixcounit : morph (t i o) o
     ixcomultiplication : morph (t i o) (t i (t i o))

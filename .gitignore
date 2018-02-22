@@ -1,4 +1,4 @@
 *.ibc
 *.o
 *.vscode
-idrisBuild
+build

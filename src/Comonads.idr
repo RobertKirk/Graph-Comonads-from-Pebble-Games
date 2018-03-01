@@ -21,11 +21,16 @@ playsN (S n) (S pebs) (x::xs) = let plays = playsN n (S pebs) (x::xs) in
     plays ++ [play ++ [((restrict pebs (toIntegerNat peb)), (restrict (length xs) (toIntegerNat el)))] 
                 | play <- plays, el <- [0..(length (x::xs))], peb <-[0..(S pebs)]]
 
--- pebblesRel : {n: Nat} -> (xs: List t) -> Rel t -> Rel (playsType n xs)
--- pebblesRel xs r = (\(ps1,ps2) => 
---     --(List.isPrefixOf ps1 ps2 || List.isPrefixOf ps2 ps1) && 
---     r (List.index (Basics.snd (last ps1)) xs, List.index (Basics.snd (last ps2)) xs)
---     )   
+pebblesRel : {n: Nat} -> (xs: List t) -> Rel t -> Rel (playsType n xs)
+pebblesRel xs r = (\((p1::ps1),(p2::ps2)) => 
+    (((List.isPrefixOf (p1::ps1) (p2::ps2)) && 
+        (isNothing (find ((==) (Basics.fst (last (p1::ps1)))) 
+                    (List.take (minus (length (p2::ps2)) (length (p1::ps1))) (reverse (map Basics.fst (p2::ps2)))))))
+    || ((List.isPrefixOf (p2::ps2) (p1::ps1)) && 
+        (isNothing (find ((==) (Basics.fst (last (p2::ps2)))) 
+                (List.take (minus (length (p1::ps1)) (length (p2::ps2))) (reverse (map Basics.fst (p1::ps1))))))))
+    && (r (List.index (finToNat (Basics.snd (last (p1::ps1)))) xs, List.index (finToNat (Basics.snd (last (p2::ps2)))) xs))
+    )
 
 -- TkObj : Nat -> Graph -> Graph
 -- TkObj pebs (t ** vs ** e) = 
@@ -33,3 +38,6 @@ playsN (S n) (S pebs) (x::xs) = let plays = playsN n (S pebs) (x::xs) in
 --     (playsN (length v) pebs vs) **
 --     pebblesRel pebs vs e
 --     )
+
+-- TkMorph : Nat -> Gmorph g1 g2 -> Gmorph (TkObj g1) (TkObj g2)
+-- TkMorph n (Gmor vmap emap) = Gmor (map (\(p,el) => (p, vmap el))) (\(v1,v2) => )

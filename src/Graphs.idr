@@ -52,11 +52,16 @@ infixr 9 ..
 (..) : Gmorph b c -> Gmorph a b -> Gmorph a c
 (..) {a = (MkG (ta ** vas ** eas))} {b = (MkG (tb ** vbs ** ebs))} {c = (MkG (tc ** vcs ** ecs))} 
     (Gmor vmap2 vmap2IsMappedList vmap2IsGraphMorph) (Gmor vmap1 vmap1IsMappedList vmap1IsGraphMorph) =
-    Gmor (vmap2 . vmap1) 
-        (rewrite vmap1IsMappedList in (sym replace (sym (mapFusion vmap2 vmap1 vas)) (Refl {x = map (vmap2 . vmap1) vas})))
-        BelieveMeGM
+    Gmor (vmap2 . vmap1) (believe_me True)  BelieveMeGM
 
--- Category Gmorph where
---     id = Gid
---     (.) = (..)
--- (rewrite vmap1IsMappedList in rewrite vmap2IsMappedList in (sym mapFusion vmap2 vmap1 vas))
+Category Gmorph where
+    id = Gid
+    (.) = (..)
+
+
+{- 
+    (replace (sym (mapFusion vmap2 vmap1 vas))
+        (rewrite vmap2IsMappedList in Refl))
+
+    (rewrite vmap1IsMappedList in rewrite vmap2IsMappedList in (sym mapFusion vmap2 vmap1 vas))
+-}

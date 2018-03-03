@@ -29,15 +29,16 @@ pebblesRel xs r = (\((p1::ps1),(p2::ps2)) =>
     || ((List.isPrefixOf (p2::ps2) (p1::ps1)) && 
         (isNothing (find ((==) (Basics.fst (last (p2::ps2)))) 
                 (List.take (minus (length (p1::ps1)) (length (p2::ps2))) (reverse (map Basics.fst (p1::ps1))))))))
-    && (r (List.index (finToNat (Basics.snd (last (p1::ps1)))) xs, List.index (finToNat (Basics.snd (last (p2::ps2)))) xs))
+    && (r (List.index {ok = believe_me True} (finToNat (Basics.snd (last (p1::ps1)))) xs, List.index {ok = believe_me True} (finToNat (Basics.snd (last (p2::ps2)))) xs))
     )
 
--- TkObj : Nat -> Graph -> Graph
--- TkObj pebs (t ** vs ** e) = 
---     ((playsType pebs v) ** 
---     (playsN (length v) pebs vs) **
---     pebblesRel pebs vs e
---     )
+TkObj : Nat -> Graph -> Graph
+TkObj pebs (MkG (t ** vs ** e)) = 
+    MkG ((playsType pebs vs) ** 
+    (playsN (length vs) pebs vs) ** -- length vs should really be infinite here
+    pebblesRel {n=pebs} vs e
+    )
 
--- TkMorph : Nat -> Gmorph g1 g2 -> Gmorph (TkObj g1) (TkObj g2)
--- TkMorph n (Gmor vmap emap) = Gmor (map (\(p,el) => (p, vmap el))) (\(v1,v2) => )
+TkMorph : (pebs:Nat) -> Gmorph g1 g2 -> Gmorph (TkObj pebs g1) (TkObj pebs g2)
+TkMorph {g1 = MkG (t1 ** v1 ** e1)} {g2 = MkG (t2 ** v2 ** e2)} pebs (Gmor vmap vmapIsMappedList vmapIsGraphMorph) = 
+    ?hole

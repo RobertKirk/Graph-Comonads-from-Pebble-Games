@@ -1,6 +1,7 @@
 module ProofHelpers
 
 %access public export
+%default total
 
 data IsTrueBool : Bool -> Type where
     IsTrue : (True : Bool) -> IsTrueBool True
@@ -20,3 +21,10 @@ data IsElemOfList : (x : t) -> (ys : List t) -> Type where
 mapIdIsId : (xs: List t) -> map Basics.id xs = xs
 mapIdIsId [] = Refl
 mapIdIsId (x::xs) = let rec = mapIdIsId xs in rewrite rec in Refl
+
+mappedListsHaveSameLength : (f : t1 -> t2) -> (xs : List t1) -> (ys : List t2) -> map f xs = ys -> length xs = length ys
+mappedListsHaveSameLength f xs ys pf = rewrite sym pf in rewrite mapPreservesLength f xs in Refl
+
+intermediateMapsCompose : (f : t1 -> t2) -> (g: t2 -> t3) -> (xs : List t1) -> 
+    (ys : List t2) -> (zs : List t3) -> map f xs = ys -> map g ys = zs -> map (g . f) xs = zs
+intermediateMapsCompose f g xs ys zs pf1 pf2 = rewrite sym (mapFusion g f xs) in rewrite pf1 in rewrite pf2 in Refl

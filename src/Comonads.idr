@@ -1,6 +1,7 @@
 module Comonads
 import Data.Fin
 import src.Categories
+import src.RCategories
 import src.Graphs
 import src.ProofHelpers
 
@@ -36,20 +37,18 @@ pebblesRel xs r ((p1::ps1),(p2::ps2)) =
                 (List.take (minus (length (p1::ps1)) (length (p2::ps2))) (reverse (map Basics.fst (p1::ps1))))))))
     && (r (List.index {ok = believe_me True} (finToNat (Basics.snd (last (p1::ps1)))) xs, List.index {ok = believe_me True} (finToNat (Basics.snd (last (p2::ps2)))) xs))
     
-
 TkObj : Nat -> Graph -> Graph
-TkObj pebs (MkG (t ** vs ** e)) = 
-    MkG ((playsType pebs vs) ** 
+TkObj pebs (t ** vs ** e) = 
+    ((playsType pebs vs) ** 
     (playsN (length vs) pebs vs) ** -- length vs should really be infinite here
-    pebblesRel {n=pebs} vs e
-    )
-
+    pebblesRel {n=pebs} vs e)
+    
 myMorph : length v1 = length v2 -> playsType pebs v1 -> playsType pebs v2
 myMorph pf xs = rewrite sym pf in map id xs
 
 TkMorph : {g1,g2 : Graph} -> (pebs:Nat) -> Gmorph g1 g2 -> Gmorph (TkObj pebs g1) (TkObj pebs g2)
-TkMorph {g1 = MkG (t1 ** v1 ** e1)} {g2 = MkG (t2 ** v2 ** e2)} pebs (Gmor vmap vmapIsMappedList vmapIsGraphMorph) = 
+TkMorph {g1 = (t1 ** v1 ** e1)} {g2 = (t2 ** v2 ** e2)} pebs (Gmor vmap vmapIsMappedList vmapIsGraphMorph) = 
     Gmor (rewrite (mappedListsHaveSameLength vmap v1 v2 vmapIsMappedList) in map id) ?hole2 ?hole3
-    
--- Categories.Functor Gmorph (TkObj Z) where
---     fmap = (TkMorph Z)
+
+pebbleFunctor : Nat -> RFunctor Graph GraphCat 
+pebbleFunctor n = RFunctorInfo (TkObj n) (TkMorph n)

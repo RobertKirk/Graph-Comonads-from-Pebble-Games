@@ -5,9 +5,9 @@ module RCategories
 
 record RCategory (obj : Type) where
     constructor RCategoryInfo
-    mor : obj -> obj -> Type
-    idd : {p: obj} -> mor p p
-    comp : {a:obj} -> {b:obj} -> {c:obj} -> mor b c -> mor a b -> mor a c
+    mor  : obj -> obj -> Type
+    idd  : {p: obj} -> mor p p
+    comp : {a : obj} -> {b : obj} -> {c : obj} -> mor b c -> mor a b -> mor a c
     --idLeftIdentity : {a: obj} -> {b: obj} -> (f: mor a b) -> (comp idd f) = f
     --idRightIdentity : {a: obj} -> {b: obj} -> (f: mor a b) -> f = (comp idd f)
     --compIsAccoc : {a: obj} -> {b: obj} -> {c : obj} -> {d : obj} -> 
@@ -15,18 +15,18 @@ record RCategory (obj : Type) where
 
 record RFunctor (obj: Type) (cat : RCategory obj) where
     constructor RFunctorInfo
-    func: obj -> obj
-    fmap : {a:obj} -> {b:obj} -> (mor cat) a b -> (mor cat) (func a) (func b)
+    func : obj -> obj
+    fmap : {a : obj} -> {b : obj} -> (mor cat) a b -> (mor cat) (func a) (func b)
     --fmapRespectsId : (a : obj) -> fmap ((idd cat)) = (idd cat)
 
 record RComonad (obj : Type) (cat : RCategory obj) where
     constructor RComonadInfo
-    comon : RFunctor obj cat
+    comon  : RFunctor obj cat
     counit : {a : obj} -> (mor cat) a ((func comon) a)
-    comult : {a :obj} -> (mor cat) ((func comon) a) ((func comon) ((func comon) a))
+    comult : {a : obj} -> (mor cat) ((func comon) a) ((func comon) ((func comon) a))
 
 record RIxComonad (obj : Type) (cat : RCategory obj) (ind: Type) where
     constructor RIxComonadInfo
     indcomon : ind -> RFunctor obj cat
-    counit : {a : obj} -> {k : ind} -> (mor cat) a ((func (indcomon k)) a)
-    comult : {a :obj} -> {k : ind} -> (mor cat) ((func (indcomon k)) a) ((func (indcomon k)) ((func (indcomon k)) a))
+    counit   : {a : obj} -> {k : ind} -> (mor cat) ((func (indcomon k)) a) a
+    comult   : {a : obj} -> {k : ind} -> (mor cat) ((func (indcomon k)) a) ((func (indcomon k)) ((func (indcomon k)) a))

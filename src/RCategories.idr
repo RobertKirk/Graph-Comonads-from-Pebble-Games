@@ -13,7 +13,7 @@ record RCategory (obj : Type) where
     --compIsAccoc : {a: obj} -> {b: obj} -> {c : obj} -> {d : obj} -> 
     --    (f : mor a b) -> (g : mor b c) -> (h : mor c d) -> comp h (comp g f) = comp (comp h g) f
 
-record RFunctor (obj: Type) (cat : RCategory obj) where
+record RFunctor (obj : Type) (cat : RCategory obj) where
     constructor RFunctorInfo
     func : obj -> obj
     fmap : {a : obj} -> {b : obj} -> (mor cat) a b -> (mor cat) (func a) (func b)
@@ -25,8 +25,8 @@ record RComonad (obj : Type) (cat : RCategory obj) where
     counit : {a : obj} -> (mor cat) a ((func comon) a)
     comult : {a : obj} -> (mor cat) ((func comon) a) ((func comon) ((func comon) a))
 
-record RIxComonad (obj : Type) (cat : RCategory obj) (ind: Type) where
-    constructor RIxComonadInfo
-    indcomon : ind -> RFunctor obj cat
-    counit   : {a : obj} -> {k : ind} -> (mor cat) ((func (indcomon k)) a) a
-    comult   : {a : obj} -> {k : ind} -> (mor cat) ((func (indcomon k)) a) ((func (indcomon k)) ((func (indcomon k)) a))
+record RIxCondComonad (obj : Type) (cat : RCategory obj) (ind : Type) (cond : ind -> Type) where
+    constructor RIxCondComonadInfo
+    indcomon : (k : ind) -> {pf : cond k} -> RFunctor obj cat
+    counit   : {a : obj} -> {k : ind} -> {p : cond k} -> (mor cat) ((func (indcomon k {pf = p})) a) a
+    comult   : {a : obj} -> {k : ind} -> {p : cond k} -> (mor cat) ((func (indcomon k {pf = p})) a) ((func (indcomon k {pf = p})) ((func (indcomon k {pf = p})) a))

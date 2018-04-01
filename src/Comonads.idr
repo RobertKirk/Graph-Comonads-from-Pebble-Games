@@ -1,10 +1,13 @@
 module Comonads
 import Data.Fin
+import Prelude.Nat
 import src.ProofHelpers
+import src.NonEmptyStream
 
 import src.RCategories
 import src.Graphs
 
+%access public export
 %default total
 
 -- a play with n pebbles is a list of pairs of the pebble being played each turn, 
@@ -19,36 +22,32 @@ playsType pebs t = List ((Fin pebs), t)
         if x==y then xs==ys else False
     (==) _ _ = False
 
-finUnit : Fin (S n)
-finUnit = 0
+-- the Non empty (infinite) stream of plays with pebs number of pebbles on the stream xs
+plays : Eq t => (pebs:Nat) -> {auto ok : IsSucc pebs}-> (xs: NEStream t) -> (NEStream (playsType pebs t))
+plays Z xs {ok = ItIsSucc} impossible
+plays (S pebs) (Sing x) = concatNESofList [(FZ,x)] 
+    (iterate (\ys => concat (map (\xs => (map (\p => (restrict pebs (toIntegerNat p), x)::xs) [0..pebs])) ys)) (map (\p => [(restrict pebs (toIntegerNat p), x)]) [0..pebs]))
+plays (S pebs) (x:>:xs) = ?hole
 
--- the list of plays of length up to n with pebs number of pebbles on the list xs
-playsN : Eq t => (n:Nat) -> (pebs:Nat) -> (xs: List t) -> (List (playsType pebs t))
-playsN Z pebs xs = [[]]
-playsN n pebs [] = [[]]
-playsN n Z xs = [[]]
-playsN (S n) (S pebs) (x::xs) = let plays = playsN n (S pebs) (x::xs) in
-    plays ++ [play ++ [(restrict pebs (toIntegerNat peb),el)] 
-                | play <- plays, el <- (x::xs), peb <- [0..(S pebs)]]
-
-pebblesRel : Eq t => {n: Nat} -> (xs: List t) -> Rel t -> Rel (playsType n t)
-pebblesRel xs r ([],_) = True
-pebblesRel xs r (_,[]) = True
-pebblesRel xs r ((p1::ps1),(p2::ps2)) = 
-    ((List.isPrefixOf (p1::ps1) (p2::ps2)) &&
-        (isNothing (find (\x => True) 
+pebblesRel : Eq t => {n: Nat} -> Rel t -> Rel (playsType n t)
+pebblesRel r ([],_) = True
+pebblesRel r (_,[]) = True
+pebblesRel r ((p1::ps1),(p2::ps2)) = 
+    (((List.isPrefixOf (p1::ps1) (p2::ps2)) &&
+        (isNothing (find ((==) (Basics.fst (last (p1::ps1))))
                     (List.take (minus (length (p2::ps2)) (length (p1::ps1))) (reverse (map Basics.fst (p2::ps2)))))))
     || ((List.isPrefixOf (p2::ps2) (p1::ps1)) && 
         (isNothing (find ((==) (Basics.fst (last (p2::ps2)))) 
-                (List.take (minus (length (p1::ps1)) (length (p2::ps2))) (reverse (map Basics.fst (p1::ps1)))))))
+                (List.take (minus (length (p1::ps1)) (length (p2::ps2))) (reverse (map Basics.fst (p1::ps1))))))))
     && r (snd (last (p1::ps1)), snd (last (p2::ps2)))
     
 
-TkObj : Nat -> Graph -> Graph
-TkObj pebs (t ** vs ** e ** eqt) = 
+TkObj : (pebs:Nat) -> {auto ok : IsSucc pebs} -> Graph -> Graph
+TkObj Z g {ok = ItIsSucc } impossible
+TkObj pebs (t ** vs ** e ** eqt) {ok = p} = 
     ((playsType pebs t) ** 
-    (playsN (length vs) pebs vs) ** -- length vs should really be infinite here
-    (pebblesRel {n=pebs} vs e) **
+    (plays {ok = p} pebs vs) **
+    (pebblesRel {n=pebs} e) **
     playsTypeEq)
   
 -- myMorph : length v1 = length v2 -> playsType pebs v1 -> playsType pebs v2
@@ -57,25 +56,29 @@ TkObj pebs (t ** vs ** e ** eqt) =
 pebmap : (t1 -> t2) -> (playsType n t1) -> (playsType n t2)
 pebmap vmap xs = map (\(x,y) => (x, vmap y)) xs
 
-TkMorph : {g1, g2 : Graph} -> (pebs:Nat) -> Gmorph g1 g2 -> Gmorph (TkObj pebs g1) (TkObj pebs g2)
-TkMorph {g1 = (t1 ** v1 ** e1 **eq1)} {g2 = (t2 ** v2 ** e2 ** eq2)} pebs (Gmor vmap vmapIsMappedList vmapIsGraphMorph) = 
-    Gmor (pebmap vmap) (believe_me True) (believe_me True)
+TkMorph : {g1, g2 : Graph} -> (pebs:Nat) -> {auto ok : IsSucc pebs} -> Gmorph g1 g2 -> Gmorph (TkObj pebs g1) (TkObj pebs g2)
+TkMorph Z morp {ok = ItIsSucc} impossible
+TkMorph {g1 = (t1 ** v1 ** e1 **eq1)} {g2 = (t2 ** v2 ** e2 ** eq2)} pebs (Gmor vmap vmapIsGraphMorph) {ok = p} = 
+    Gmor (pebmap vmap) (believe_me True)
   
-pebbleFunctor : Nat -> RFunctor Graph GraphCat 
-pebbleFunctor n = RFunctorInfo (TkObj n) (TkMorph n)
+pebbleFunctor : (pebs:Nat) -> {auto ok : IsSucc pebs} -> RFunctor Graph GraphCat
+pebbleFunctor Z {ok = ItIsSucc} impossible
+pebbleFunctor n {ok = p} = RFunctorInfo (TkObj n {ok = p}) (TkMorph n {ok = p})
 
 counitFunc : playsType k t -> t
 counitFunc [] = ?hole
 counitFunc (p::ps) = snd (last (p::ps))
 
-counitPeb : {g : Graph} -> {n : Nat} -> Gmorph (TkObj n g) g
-counitPeb {g = (t ** vs ** es ** eq)} = Gmor counitFunc (believe_me True) (believe_me True)
+counitPeb : {g : Graph} -> {n : Nat} -> {auto ok : IsSucc n} -> Gmorph (TkObj n g) g
+counitPeb {n=Z} {ok = ItIsSucc} impossible
+counitPeb {g = (t ** vs ** es ** eq)} {n = (S k)} {ok = p} = Gmor counitFunc (believe_me True)
  
 comultFunc : (playsType k t) -> (playsType k (playsType k t))
 comultFunc plays = zip (map fst plays) (inits plays)
 
-comultPeb : {g : Graph} -> {n : Nat} -> Gmorph (TkObj n g) (TkObj n (TkObj n g))
-comultPeb {g = (t ** vs ** es ** eq)} = Gmor comultFunc (believe_me True) (believe_me True)
+comultPeb : {g : Graph} -> {n : Nat} -> {auto ok : IsSucc n} -> Gmorph (TkObj n g) (TkObj n (TkObj n g))
+comultPeb {n = Z} {ok = ItIsSucc} impossible
+comultPeb {g = (t ** vs ** es ** eq)} {n = (S k)} {ok = p} = Gmor comultFunc (believe_me True)
 
-pebbleIndexedComonad : RIxComonad Graph GraphCat Nat
-pebbleIndexedComonad = RIxComonadInfo pebbleFunctor counitPeb comultPeb
+pebbleIndexedComonad : RIxCondComonad Graph GraphCat Nat IsSucc
+pebbleIndexedComonad = RIxCondComonadInfo pebbleFunctor counitPeb comultPeb

@@ -37,14 +37,21 @@ listToNEStream [] {ok=IsNonEmpty} impossible
 listToNEStream [x] {ok=p} = Sing x
 listToNEStream (x::y::ys) {ok=p} = x:>:(listToNEStream {ok = IsNonEmpty} (y::ys))
 
-concatNESofList : t -> NEStream (List t) -> NEStream t
+-- we may have a Non-empty stream of lists, all of which are empty, so we need a unit
+concatNESofList : (unit:t) -> NEStream (List t) -> NEStream t
 concatNESofList unit (Sing []) = Sing unit
 concatNESofList unit (Sing [x]) = Sing x
 concatNESofList unit (Sing (x::y::xs)) = x :>: (assert_total (concatNESofList unit (Sing (y::xs))))
 concatNESofList unit (x:>:xs) = case x of
         []          => assert_total (concatNESofList unit xs)
-        [z]         =>  z :>: (assert_total (concatNESofList unit xs))
-        z::y::ys    => z :>: (assert_total (concatNESofList unit ((y::ys):>:xs)))
+        [z]         =>  z :>: (concatNESofList unit xs)
+        z::y::ys    => z :>: (concatNESofList unit ((y::ys):>:xs))
+
+concatNESofNES : NEStream (NEStream t) -> NEStream t
+concatNESofNES (Sing xs) = xs
+concatNESofNES (x:>:xs) = case x of
+    Sing y => y :>: (concatNESofNES xs)
+    (y:>:ys) => y :>: (concatNESofNES (ys:>:xs))
 
 --Examples
 mystream : NEStream Nat

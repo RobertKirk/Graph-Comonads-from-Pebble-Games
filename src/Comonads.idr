@@ -1,12 +1,13 @@
 module Comonads
 import Data.Fin
-import Prelude.Nat
 import src.ProofHelpers
 import src.NonEmptyStream
+import src.NonEmptyList
 
 import src.RCategories
 import src.Graphs
 
+%hide Stream.(::)
 %access public export
 %default total
 
@@ -25,9 +26,15 @@ playsType pebs t = List ((Fin pebs), t)
 -- the Non empty (infinite) stream of plays with pebs number of pebbles on the stream xs
 plays : Eq t => (pebs:Nat) -> {auto ok : IsSucc pebs}-> (xs: NEStream t) -> (NEStream (playsType pebs t))
 plays Z xs {ok = ItIsSucc} impossible
-plays (S pebs) (Sing x) = concatNESofList [(FZ,x)] 
+plays (S pebs) (Sing x) = concatNESofList [(FZ,x)]
     (iterate (\ys => concat (map (\xs => (map (\p => (restrict pebs (toIntegerNat p), x)::xs) [0..pebs])) ys)) (map (\p => [(restrict pebs (toIntegerNat p), x)]) [0..pebs]))
-plays (S pebs) (x:>:xs) = ?hole
+plays (S pebs) (x:>:xs) = concatNESofNES(iterate (uplength (x:>:xs) pebs) (initial pebs (x:>:xs)))
+            where   uplength : NEStream t -> (pebs:Nat) -> NEStream (playsType (S pebs) t) -> NEStream (playsType (S pebs) t)
+                    uplength xs pebs ys = concatNESofNES (map (\zs =>
+                        concatNESofList [(FZ,x)] (map (\z => map (\p => (restrict pebs (toIntegerNat p), z)::zs) [0..pebs]) xs)) 
+                        ys)
+                    initial : (pebs:Nat) -> NEStream t-> NEStream (playsType (S pebs) t)
+                    initial pebs xs = concatNESofList [(FZ,x)] (map (\y => map (\p => [(restrict pebs (toIntegerNat p), y)]) [0..pebs]) xs)
 
 pebblesRel : Eq t => {n: Nat} -> Rel t -> Rel (playsType n t)
 pebblesRel r ([],_) = True
@@ -49,9 +56,6 @@ TkObj pebs (t ** vs ** e ** eqt) {ok = p} =
     (plays {ok = p} pebs vs) **
     (pebblesRel {n=pebs} e) **
     playsTypeEq)
-  
--- myMorph : length v1 = length v2 -> playsType pebs v1 -> playsType pebs v2
--- myMorph pf xs = rewrite sym pf in map id xs
 
 pebmap : (t1 -> t2) -> (playsType n t1) -> (playsType n t2)
 pebmap vmap xs = map (\(x,y) => (x, vmap y)) xs

@@ -28,6 +28,10 @@ intermediateMapsCompose : (f : t1 -> t2) -> (g: t2 -> t3) -> (xs : List t1) ->
     (ys : List t2) -> (zs : List t3) -> map f xs = ys -> map g ys = zs -> map (g . f) xs = zs
 intermediateMapsCompose f g xs ys zs pf1 pf2 = rewrite sym (mapFusion g f xs) in rewrite pf1 in rewrite pf2 in Refl
 
+mapPreservesNonEmpty : (f : a -> b) -> (xs : List a) -> NonEmpty xs -> NonEmpty (map f xs)
+mapPreservesNonEmpty f [] IsNonEmpty impossible
+mapPreservesNonEmpty f (y::ys) pf = IsNonEmpty
+
 data IsSucc : (n : Nat) -> Type where
     ItIsSucc : IsSucc (S n)
   

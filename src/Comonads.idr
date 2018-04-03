@@ -69,10 +69,6 @@ pebbleFunctor : (pebs:Nat) -> {auto ok : IsSucc pebs} -> RFunctor Graph GraphCat
 pebbleFunctor Z {ok = ItIsSucc} impossible
 pebbleFunctor n {ok = p} = RFunctorInfo (TkObj n {ok = p}) (TkMorph n {ok = p})
 
--- counitFunc : playsType k t -> t
--- counitFunc [] = ?hole
--- counitFunc (p::ps) = snd (last (p::ps))
-
 counitPeb : {g : Graph} -> {n : Nat} -> {auto ok : IsSucc n} -> Gmorph (TkObj n g) g
 counitPeb {n=Z} {ok = ItIsSucc} impossible
 counitPeb {g = (t ** vs ** es ** eq)} {n = (S k)} {ok = p} = Gmor (assert_total counitFunc) (believe_me True)

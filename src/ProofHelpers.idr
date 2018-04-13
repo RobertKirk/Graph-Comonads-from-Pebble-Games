@@ -1,6 +1,7 @@
 module ProofHelpers
 import Data.Fin
 
+import src.NonEmptyList
 import src.NonEmptyStream
 
 %access public export
@@ -31,17 +32,3 @@ intermediateMapsCompose f g xs ys zs pf1 pf2 = rewrite sym (mapFusion g f xs) in
 mapPreservesNonEmpty : (f : a -> b) -> (xs : List a) -> NonEmpty xs -> NonEmpty (map f xs)
 mapPreservesNonEmpty f [] IsNonEmpty impossible
 mapPreservesNonEmpty f (y::ys) pf = IsNonEmpty
-
-data IsSucc : (n : Nat) -> Type where
-    ItIsSucc : IsSucc (S n)
-  
-Uninhabited (IsSucc Z) where
-    uninhabited ItIsSucc impossible
-  
-||| A decision procedure for `IsSucc`
-isItSucc : (n : Nat) -> Dec (IsSucc n)
-isItSucc Z = No absurd
-isItSucc (S n) = Yes ItIsSucc
-
-finUnit : Fin (S k)
-finUnit = FZ

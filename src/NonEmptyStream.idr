@@ -1,4 +1,5 @@
 module NonEmptyStream
+import src.NonEmptyList
 
 %access public export
 %default total
@@ -41,17 +42,24 @@ listToNEStream (x::y::ys) {ok=p} = x:>:(listToNEStream {ok = IsNonEmpty} (y::ys)
 concatNESofList : (unit:t) -> NEStream (List t) -> NEStream t
 concatNESofList unit (Sing []) = Sing unit
 concatNESofList unit (Sing [x]) = Sing x
-concatNESofList unit (Sing (x::y::xs)) = x :>: (assert_total (concatNESofList unit (Sing (y::xs))))
+concatNESofList unit (Sing (x::y::xs)) = x :>: (concatNESofList unit (Sing (y::xs)))
 concatNESofList unit (x:>:xs) = case x of
         []          => assert_total (concatNESofList unit xs)
         [z]         =>  z :>: (concatNESofList unit xs)
         z::y::ys    => z :>: (concatNESofList unit ((y::ys):>:xs))
+
+NELtoNES : NEList t -> NEStream t
+NELtoNES (Singl x) = Sing x
+NELtoNES (x:<:xs) = x :>: (NELtoNES xs)
 
 concatNESofNES : NEStream (NEStream t) -> NEStream t
 concatNESofNES (Sing xs) = xs
 concatNESofNES (x:>:xs) = case x of
     Sing y => y :>: (concatNESofNES xs)
     (y:>:ys) => y :>: (concatNESofNES (ys:>:xs))
+
+concatNESofNEL : NEStream (NEList t) -> NEStream t
+concatNESofNEL xs = concatNESofNES (map NELtoNES xs)
 
 --Examples
 mystream : NEStream Nat

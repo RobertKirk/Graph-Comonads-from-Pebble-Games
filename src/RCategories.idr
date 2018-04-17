@@ -6,27 +6,18 @@ module RCategories
 record RCategory (obj : Type) where
     constructor RCategoryInfo
     mor  : obj -> obj -> Type
-    idd  : {p: obj} -> mor p p
+    idd  : {p : obj} -> mor p p
     comp : {a : obj} -> {b : obj} -> {c : obj} -> mor b c -> mor a b -> mor a c
-
-    -- equality : {a : obj} -> {b : obj} -> mor a b -> mor a b -> Bool
-
-    -- idLeftIdentity : {a: obj} -> {b: obj} -> (f: mor a b) -> True = equality (comp idd f) f
-    -- idRightIdentity : {a: obj} -> {b: obj} -> (f: mor a b) -> True = equality (comp f idd) f
-    -- compIsAccoc : {a: obj} -> {b: obj} -> {c : obj} -> {d : obj} -> 
-    --    (f : mor a b) -> (g : mor b c) -> (h : mor c d) -> comp h (comp g f) = comp (comp h g) f
 
 record RFunctor (obj : Type) (cat : RCategory obj) where
     constructor RFunctorInfo
     func : obj -> obj
     fmap : {a : obj} -> {b : obj} -> (mor cat) a b -> (mor cat) (func a) (func b)
-
-    -- fmapRespectsId : (a : obj) -> fmap ((idd cat)) = (idd cat)
-
+    
 record RComonad (obj : Type) (cat : RCategory obj) where
     constructor RComonadInfo
     comon  : RFunctor obj cat
-    counit : {a : obj} -> (mor cat) a ((func comon) a)
+    counit : {a : obj} -> (mor cat) ((func comon) a) a
     comult : {a : obj} -> (mor cat) ((func comon) a) ((func comon) ((func comon) a))
 
 record RIxComonad (obj : Type) (cat : RCategory obj) (ind : Type) where
@@ -47,12 +38,12 @@ record RIxCondComonad (obj : Type) (cat : RCategory obj) (ind : Type) (cond : in
 record RAppCategory (obj : Type) where
     constructor RAppCategoryInfo
     mor  : obj -> obj -> Type
-    idd  : {p: obj} -> mor p p
+    idd  : {p : obj} -> mor p p
     comp : {a : obj} -> {b : obj} -> {c : obj} -> mor b c -> mor a b -> mor a c
     el   : obj -> Type
     app  : {a : obj} -> {b : obj} -> (f : mor a b) -> (x : el a) -> el b
 
-    idLeftIdentity : {a: obj} -> {b: obj} -> (f: mor a b) -> (x : el a) -> app (comp f idd) x = app f x
-    -- idRightIdentity : {a: obj} -> {b: obj} -> (f: mor a b) -> True = equality (comp f idd) f
-    -- compIsAccoc : {a: obj} -> {b: obj} -> {c : obj} -> {d : obj} -> 
-    --    (f : mor a b) -> (g : mor b c) -> (h : mor c d) -> comp h (comp g f) = comp (comp h g) f
+    idLeftIdentity  : {a : obj} -> {b : obj} -> (f : mor a b) -> (x : el a) -> app (comp f idd) x = app f x
+    idRightIdentity : {a : obj} -> {b : obj} -> (f : mor a b) -> (x : el a) -> app (comp idd f) x = app f x
+    compIsAccoc : {a : obj} -> {b : obj} -> {c : obj} -> {d : obj} -> (x: el a) ->
+       (f : mor a b) -> (g : mor b c) -> (h : mor c d) -> app (comp h (comp g f)) x = app (comp (comp h g) f) x

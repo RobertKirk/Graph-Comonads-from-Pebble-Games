@@ -77,10 +77,6 @@ toList : NEList t -> List t
 toList (Singl x) = [x]
 toList (x:<:xs) = x :: (toList xs)
 
-NEListIsNonEmpty : (ys : NEList t) -> NonEmpty (toList ys)
-NEListIsNonEmpty (Singl x) = IsNonEmpty 
-NEListIsNonEmpty (x:<:xs) = IsNonEmpty
-
 isPrefixOfBy : (eq : a -> a -> Bool) -> (left, right : NEList a) -> Bool
 isPrefixOfBy p (Singl x) ys         = p x (head ys)
 isPrefixOfBy p (x:<:xs) (Singl y)   = False
@@ -97,3 +93,6 @@ find p (x:<:xs) =
   else
     find p xs
 
+NEListIsNonEmpty : (ys : NEList t) -> NonEmpty (toList ys)
+NEListIsNonEmpty (Singl x) = IsNonEmpty 
+NEListIsNonEmpty (x:<:xs) = IsNonEmpty

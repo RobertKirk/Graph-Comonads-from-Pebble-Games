@@ -60,16 +60,3 @@ concatNESofNES (x:>:xs) = case x of
 
 concatNESofNEL : NEStream (NEList t) -> NEStream t
 concatNESofNEL xs = concatNESofNES (map NELtoNES xs)
-
---Examples
-mystream : NEStream Nat
-mystream = 1 :>: 2 :>: 3 :>: 4 :>: Sing 1
-
-ones : NEStream Nat
-ones = 1 :>: ones
-
-twos : NEStream Nat
-twos = map (\x => 2*x) ones
-
-doubles : NEStream Nat
-doubles = iterate (\x => x*2) 1

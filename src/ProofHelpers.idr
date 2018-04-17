@@ -17,3 +17,8 @@ intermediateMapsCompose f g xs ys zs pf1 pf2 = rewrite sym (mapFusion g f xs) in
 mapPreservesNonEmpty : (f : a -> b) -> (xs : List a) -> NonEmpty xs -> NonEmpty (map f xs)
 mapPreservesNonEmpty f [] IsNonEmpty impossible
 mapPreservesNonEmpty f (y::ys) pf = IsNonEmpty
+
+-- andTrueImpliesConjunctsTrue : (a : Bool) -> True = a && b -> a = True
+-- andTrueImpliesConjunctsTrue a prf = case a of
+--     True => Refl
+--     False => uninhabited Refl

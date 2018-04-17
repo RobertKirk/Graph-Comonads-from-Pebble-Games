@@ -38,7 +38,8 @@ plays (S pebs) (x:>:xs) = concatNESofNES (iterate (uplength (x:>:xs) pebs) (init
                             (map (\el => map (\p => (restrict pebs (toIntegerNat p), el):<:els) [0..pebs]) zs)) 
                         ys)
                     initial : (pebs:Nat) -> NEStream t-> NEStream (playsType (S pebs) t)
-                    initial pebs ys = concatNESofList (Singl (FZ,x)) (map (\y => map (\p => (Singl (restrict pebs (toIntegerNat p), y))) [0..pebs]) ys)
+                    initial pebs ys = concatNESofList (Singl (FZ,x)) (map (\y => 
+                        map (\p => (Singl (restrict pebs (toIntegerNat p), y))) [0..pebs]) ys)
 
 pebblesRelLT : Eq t =>  (xs : playsType n t) -> (ys : playsType n t) -> 
                         (ord : Ordering) -> ord = compare (length xs) (length ys) -> Bool
@@ -64,8 +65,11 @@ pebmap vmap xs = map (\(x,y) => (x, vmap y)) xs
 
 TkMorph : {g1, g2 : Graph} -> (pebs:Nat) -> {auto ok : IsSucc pebs} -> Gmorph g1 g2 -> Gmorph (TkObj pebs g1) (TkObj pebs g2)
 TkMorph Z morp {ok = ItIsSucc} impossible
-TkMorph {g1 = (t1 ** v1 ** e1 **eq1)} {g2 = (t2 ** v2 ** e2 ** eq2)} pebs (Gmor vmap vmapIsGraphMorph) {ok = p} = 
-    Gmor (pebmap vmap) (believe_me True)
+TkMorph {g1 = (t1 ** v1 ** e1 ** eq1)} {g2 = (t2 ** v2 ** e2 ** eq2)} pebs (Gmor vmap vmapIsGraphMorph) {ok = p} = 
+    Gmor (pebmap vmap) (IsGraphMorphByElem prf)
+        where   prf : (a : playsType pebs t1) -> (b : playsType pebs t1) -> True = (pebblesRel {n=pebs} e1) (a, b) -> 
+                    True = (pebblesRel {n=pebs} e2) (pebmap vmap a, pebmap vmap b)
+                prf xs ys prfae1b = ?hole5
   
 pebbleFunctor : (pebs:Nat) -> {auto ok : IsSucc pebs} -> RFunctor Graph GraphCat
 pebbleFunctor Z {ok = ItIsSucc} impossible
@@ -73,15 +77,22 @@ pebbleFunctor n {ok = p} = RFunctorInfo (TkObj n {ok = p}) (TkMorph n {ok = p})
 
 counitPeb : {g : Graph} -> {n : Nat} -> {auto ok : IsSucc n} -> Gmorph (TkObj n g) g
 counitPeb {n=Z} {ok = ItIsSucc} impossible
-counitPeb {g = (t ** vs ** es ** eq)} {n = (S k)} {ok = p} = Gmor counitFunc (believe_me True)
+counitPeb {g = (t ** vs ** es ** eq)} {n = (S k)} {ok = p} = Gmor counitFunc (IsGraphMorphByElem prf)
     where   counitFunc : playsType m t -> t
             counitFunc ps = snd (last ps)
+            prf : (a : playsType pebs t) -> (b : playsType pebs t) -> True = (pebblesRel {n=pebs} es) (a,b) -> 
+                True = es (counitFunc a, counitFunc b)
+            prf xs ys prfaesb = ?hole1
 
 comultPeb : {g : Graph} -> {n : Nat} -> {auto ok : IsSucc n} -> Gmorph (TkObj n g) (TkObj n (TkObj n g))
 comultPeb {n = Z} {ok = ItIsSucc} impossible
-comultPeb {g = (t ** vs ** es ** eq)} {n = (S k)} {ok = p} = Gmor comultFunc (believe_me True)
+comultPeb {g = (t ** vs ** es ** eq)} {n = (S k)} {ok = p} = Gmor comultFunc (IsGraphMorphByElem prf)
     where   comultFunc : (playsType m t) -> (playsType m (playsType m t))
             comultFunc plays = zip (map fst plays) (inits plays)
+            prf = ?hole3
+            -- prf : (a : playsType pebs t) -> (b : playsType pebs t) -> 
+            --     True = (pebblesRel {n=pebs} es) (a,b) -> True = (pebblesRel {n=pebs} (pebblesRel {n=pebs} es)) (comultFunc a, comultFunc b)
+            -- prf xs ys prfaesb = ?hole2
 
 pebbleIndexedComonad : RIxCondComonad Graph GraphCat Nat IsSucc
 pebbleIndexedComonad = RIxCondComonadInfo pebbleFunctor counitPeb comultPeb

@@ -39,8 +39,5 @@ infixr 9 ..
         where prf : (x : ta) -> (y : ta) -> True = eas (x, y) -> True = ecs ((vmap2 . vmap1) x, (vmap2 . vmap1) y)
               prf x y eqprf1 = bToCEqPrf (vmap1 x) (vmap1 y) (aToBEqPrf x y eqprf1)
 
--- GmorphEquality : Gmorph g1 g2 -> Gmorph g1 g2 -> Bool
--- GmorphEquality (Gmor f1 prf1) (Gmor f2 prf2) = f1 == f2
-
 GraphCat : RCategory Graph 
 GraphCat = RCategoryInfo Gmorph Gid (..)

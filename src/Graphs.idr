@@ -20,7 +20,7 @@ Graph =
 data IsGraphMorph : (f: t1 -> t2) -> (e1 : Rel t1) -> (e2 : Rel t2) -> Type where
     IsGraphMorphByElem : ((a : t1) -> (b : t1) -> True = e1 (a, b) -> True = e2 (f a, f b)) -> IsGraphMorph f e1 e2
 
--- note this doesn't require map f v1 = v2, or something similar saying the image of f on g1 lies in g2, 
+-- Note this doesn't require map f v1 = v2, or something similar saying the image of f on g1 lies in g2, 
 -- as we can't prove this for infinite lists                        
 data Gmorph : (g1 : Graph) -> (g2 : Graph) -> Type where
     Gmor : (f: t1 -> t2) -> IsGraphMorph f e1 e2 -> (Gmorph (t1 ** v1 ** e1 ** eq1) (t2 ** v2 ** e2 ** eq2))

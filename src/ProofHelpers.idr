@@ -18,7 +18,69 @@ mapPreservesNonEmpty : (f : a -> b) -> (xs : List a) -> NonEmpty xs -> NonEmpty 
 mapPreservesNonEmpty f [] IsNonEmpty impossible
 mapPreservesNonEmpty f (y::ys) pf = IsNonEmpty
 
--- andTrueImpliesConjunctsTrue : (a : Bool) -> True = a && b -> a = True
--- andTrueImpliesConjunctsTrue a prf = case a of
---     True => Refl
---     False => uninhabited Refl
+andTrueImpliesConjunctsTrueL : {a : Bool} -> True = a && b -> True = a
+andTrueImpliesConjunctsTrueL {a = True}  prf = Refl
+andTrueImpliesConjunctsTrueL {a = False} Refl impossible
+
+andIsCommutative : (a : Bool) -> (b : Bool) -> True = a && b -> True = b && a
+andIsCommutative False b     Refl impossible
+andIsCommutative True  False Refl impossible
+andIsCommutative True  True  prf  = Refl
+
+andTrueImpliesConjunctsTrueR : {b : Bool} -> True = a && b -> True = b
+andTrueImpliesConjunctsTrueR {a = x} {b = y} prf = andTrueImpliesConjunctsTrueL {a = y} (andIsCommutative x y prf)
+
+andCombines : (a : Bool) -> (b : Bool) -> True = a -> True = b -> True = a && b
+andCombines True  True  prfa prfb = Refl
+andCombines a     False prfa Refl impossible
+andCombines False b     Refl prfb impossible
+
+lastOfMapIsFOfLast : (f : a -> b) -> (xs : NEList a) -> last (map f xs) = f (last xs)
+lastOfMapIsFOfLast f (Singl x) = Refl
+lastOfMapIsFOfLast f (x:<:xs) = lastOfMapIsFOfLast f xs
+
+sndFuncBehaves1 : (f : t2 -> t3) -> f . snd = snd . (\p => (fst p, f (snd p)))
+sndFuncBehaves1 f = Refl
+
+pairCong : (f : (t1,t1) -> Bool) -> a = x -> b = y -> f (a,b) = f (x,y)
+pairCong f prf1 prf2 = rewrite prf1 in rewrite prf2 in Refl
+
+ltInjective : (n, m : Nat) -> lt (S n) (S m) = lt n m
+ltInjective Z Z     = Refl
+ltInjective Z (S k) = Refl
+ltInjective (S k) Z = Refl
+ltInjective (S k) (S j) = Refl 
+
+ltToLT : (n, m : Nat) -> True = (lt n m) -> LT n m
+ltToLT Z     Z     Refl impossible
+ltToLT Z     (S k) prf = LTESucc LTEZero
+ltToLT (S k) Z Refl impossible
+ltToLT (S k) (S j) prf = LTESucc (ltToLT k j prf)
+
+ltImpliesLTE : (n, m : Nat) -> LT n m -> LTE n m
+ltImpliesLTE Z Z prf impossible
+ltImpliesLTE Z (S k) prf = LTEZero
+ltImpliesLTE (S k) Z prf impossible
+ltImpliesLTE (S k) (S j) prf = lteSuccLeft prf
+
+compareToLT : (n, m : Nat) ->  LT = compare n m -> LT n m
+compareToLT Z     Z     Refl impossible
+compareToLT (S k) Z     Refl impossible
+compareToLT Z     (S k) prf = LTESucc LTEZero
+compareToLT (S k) (S j) prf = LTESucc (compareToLT k j prf)
+
+compareSwap : (n, m : Nat) ->  GT = compare n m -> LT = compare m n
+compareSwap Z     Z     Refl impossible
+compareSwap Z     (S k) Refl impossible
+compareSwap (S k) Z     prf = Refl
+compareSwap (S k) (S j) prf = compareSwap k j prf
+
+mapPreservesLengthNel : (f : a -> b) -> (l : NEList a) -> length (map f l) = length l
+mapPreservesLengthNel f (Singl x) = Refl
+mapPreservesLengthNel f (x:<:xs)  = let inductiveHypothesis = mapPreservesLengthNel f xs in rewrite inductiveHypothesis in Refl
+
+eqReflexiveCompare : (n, m : Nat) -> EQ = compare n m -> EQ = compare m n
+eqReflexiveCompare Z Z prf = Refl
+eqReflexiveCompare (S k) Z Refl impossible
+eqReflexiveCompare Z (S k) Refl impossible
+eqReflexiveCompare (S k) (S j) prf = eqReflexiveCompare k j prf

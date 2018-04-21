@@ -7,7 +7,7 @@ import src.NonEmptyStream
 
 import src.RCategories
 import src.Graphs
-import src.Comonads
+import src.PebbleComonad
 
 %default total
 

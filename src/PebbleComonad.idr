@@ -24,7 +24,7 @@ pebPlaysType pebs t = NEList (Fin pebs, t)
     (==) _ _ = False
 
 -- the Non empty (infinite) stream of plays with pebs number of pebbles on the stream xs
-pebPlays : Eq t => (pebs:Nat) -> {auto ok : IsSucc pebs} -> (xs: NEStream t) -> (NEStream (pebPlaysType pebs t))
+pebPlays : Eq t => (pebs : Nat) -> {auto ok : IsSucc pebs} -> (xs: NEStream t) -> (NEStream (pebPlaysType pebs t))
 pebPlays Z        xs {ok = ItIsSucc} impossible
 pebPlays (S pebs) xs = concatNESofNES (iterate (uplength xs pebs) (initial pebs xs))
             where   uplength : NEStream t -> (pebs:Nat) -> NEStream (pebPlaysType (S pebs) t) -> NEStream (pebPlaysType (S pebs) t)
@@ -37,7 +37,7 @@ pebPlays (S pebs) xs = concatNESofNES (iterate (uplength xs pebs) (initial pebs 
                     initial pebs ys = concatNESofList (Singl (FZ, (head xs))) (map (\y => 
                         map (\p => (Singl (restrict pebs (toIntegerNat p), y))) [0..pebs]) ys)
 
-pebblesRelSuffix : Eq t => {pebs : Nat} -> {auto ok : IsSucc pebs} -> (as : pebPlaysType pebs t) -> (bs : pebPlaysType pebs t) -> Bool
+pebblesRelSuffix : Eq t => (as : pebPlaysType pebs t) -> (bs : pebPlaysType pebs t) -> Bool
 pebblesRelSuffix xs ys with (compare (length xs) (length ys)) proof compprf
     | LT = (isPrefixOf xs ys) && (isNothing (NonEmptyList.find ((==) (Basics.fst (last xs))) 
         (map fst (drop ((-) 
@@ -49,7 +49,7 @@ pebblesRelSuffix xs ys with (compare (length xs) (length ys)) proof compprf
         (length xs) (length ys)) xs))))
     | EQ = xs == ys
 
-pebblesRel : Eq t => {pebs : Nat} -> {auto ok : IsSucc pebs} -> Rel t -> Rel (pebPlaysType pebs t)
+pebblesRel : Eq t => Rel t -> Rel (pebPlaysType pebs t)
 pebblesRel r (xs, ys) = (pebblesRelSuffix xs ys) && (r (snd (last xs), snd (last ys)))
 
 PebComonadObj : (pebs:Nat) -> {auto ok : IsSucc pebs} -> Graph -> Graph
@@ -57,7 +57,7 @@ PebComonadObj Z g {ok = ItIsSucc } impossible
 PebComonadObj pebs (t ** vs ** e ** eqt) {ok = p} = 
     ((pebPlaysType pebs t) ** 
     (pebPlays {ok = p} pebs vs) **
-    (pebblesRel {pebs=pebs} e) **
+    (pebblesRel e) **
     pebPlaysTypeEq)
 
 pairMapRight : (t2 -> t3) -> (t1,t2) -> (t1,t3)

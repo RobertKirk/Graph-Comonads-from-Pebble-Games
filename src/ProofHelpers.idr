@@ -84,3 +84,26 @@ eqReflexiveCompare Z Z prf = Refl
 eqReflexiveCompare (S k) Z Refl impossible
 eqReflexiveCompare Z (S k) Refl impossible
 eqReflexiveCompare (S k) (S j) prf = eqReflexiveCompare k j prf
+
+weakenPreservesToNat : (m : Fin k) -> finToNat m = finToNat (weaken m)
+weakenPreservesToNat FZ     = Refl
+weakenPreservesToNat (FS m) = eqSucc (finToNat m) (finToNat (weaken m)) (weakenPreservesToNat m)
+
+weakenNPreservesToNat : (n : Nat) -> (m : Fin k) -> finToNat m = finToNat (weakenN n m)
+weakenNPreservesToNat n FZ     = Refl
+weakenNPreservesToNat n (FS m) = eqSucc (finToNat m) (finToNat (weakenN n m)) (weakenNPreservesToNat n m)
+
+plusMinusProof : (n, m : Nat) -> LTE n m -> plus n (m - n) = m
+plusMinusProof Z     Z     prf = Refl
+plusMinusProof (S k) Z     (LTESucc p) impossible
+plusMinusProof (S k) Z     LTEZero impossible 
+plusMinusProof Z     (S k) prf = Refl
+plusMinusProof (S k) (S j) LTEZero impossible
+plusMinusProof (S k) (S j) (LTESucc p) = eqSucc (plus k (minus j k)) j (plusMinusProof k j p)
+
+lteToEqual : (n, m : Nat) -> LTE n m -> Not (LTE (S n) m) -> n = m
+lteToEqual Z Z prf1 prf2 = Refl
+lteToEqual (S k) Z LTEZero prf2 impossible
+lteToEqual (S k) Z (LTESucc p) prf2 impossible
+lteToEqual Z (S k) LTEZero prf2 = void (prf2 (LTESucc LTEZero))
+lteToEqual (S k) (S j) (LTESucc p) prf2 = eqSucc k j (lteToEqual k j p (prf2 . LTESucc))

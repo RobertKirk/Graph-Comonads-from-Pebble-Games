@@ -22,8 +22,17 @@ map : (a -> b) -> NEStream a -> NEStream b
 map f (Sing x) = Sing (f x)
 map f (x:>:xs) = ((f x):>:(map f xs))
 
+ap : NEStream a -> NEStream a -> NEStream a
+ap (Sing x) ys = x :>: ys
+ap (x:>:xs) ys = x :>: (ap xs ys)
+
 iterate : (a -> a) -> a -> NEStream a
 iterate f x = x :>: iterate f (f x)
+
+iterateN : (a -> a) -> a -> (n : Nat) -> {auto ok : IsSucc n} -> NEStream a
+iterateN f x Z {ok = ItIsSucc}    impossible
+iterateN f x (S Z) {ok = p}     = Sing x 
+iterateN f x (S (S k)) {ok = p} = x :>: iterateN f (f x) (S k)
 
 zipWith : (a -> b -> c) -> (NEStream a) -> (NEStream b) -> NEStream c
 zipWith f (Sing x) ys = Sing (f x (head ys))

@@ -51,7 +51,7 @@ compProof vmap1 vmap2 eas ebc ecs (IsGraphMorphByElem aToBEqPrf) (IsGraphMorphBy
 GraphCat : RCategory Graph 
 GraphCat = RCategoryInfo Gmorph Gid (..)
 
--- Now definitions for a Category of a signature with only Binary relations
+-- Now definitions for the Category of Structures over a signature with only Binary relations
 Signature : Type
 Signature = Nat            
 
@@ -69,7 +69,7 @@ data IsStructureMorph : (sig : Signature) -> (f : t1 -> t2) -> (int1 : Interpret
     EmptySigStructMorph : sig = 0 -> IsStructureMorph sig f int1 int2
     ItIsStructMorph : ((k : Fin sig) -> IsGraphMorph f (int1 k) (int2 k)) -> IsStructureMorph sig f int1 int2 
 
-data StructMorph : {sig: Signature} -> (a1, a2 : Structure sig) -> Type where
+data StructMorph : {sig : Signature} -> (a1, a2 : Structure sig) -> Type where
     Smor : (f : t1 -> t2) -> IsStructureMorph sig f int1 int2 -> StructMorph (t1 ** v1 ** int1 ** eq1) (t2 ** v2 ** int2 ** eq2)
 
 SidProof : {sig : Signature} -> (interp : Interpretation sig t) -> IsStructureMorph sig Basics.id interp interp

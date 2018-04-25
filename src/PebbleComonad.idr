@@ -138,7 +138,7 @@ pebbleFunctor : (pebs:Nat) -> {auto ok : IsSucc pebs} -> RFunctor Graph GraphCat
 pebbleFunctor Z {ok = ItIsSucc} impossible
 pebbleFunctor n {ok = p} = RFunctorInfo (PebComonadObj n {ok = p}) (PebComonadMorph n {ok = p})
 
-counitPeb : {g : Graph} -> {n : Nat} -> {auto ok : IsSucc n} -> Gmorph (PebComonadObj n g) g
+counitPeb : {g : Graph} -> (n: Nat) -> {auto ok : IsSucc n} -> Gmorph (PebComonadObj n g) g
 counitPeb {n = Z} {ok = ItIsSucc} impossible
 counitPeb {g = (t ** vs ** es ** eq)} {n = (S k)} {ok = p} = Gmor counitFunc (IsGraphMorphByElem prf)
     where   counitFunc : pebPlaysType m t -> t
@@ -150,7 +150,7 @@ counitPeb {g = (t ** vs ** es ** eq)} {n = (S k)} {ok = p} = Gmor counitFunc (Is
 -- comultPebProof : (a : pebPlaysType (S k) t) -> (b : pebPlaysType (S k) t) -> True = (pebblesRel {pebs = (S k)} es) (a,b) -> 
 --     True = (pebblesRel {pebs = (S k)} (pebblesRel {pebs = (S k)} es)) (comultFunc a, comultFunc b)
 
-comultPeb : {g : Graph} -> {n : Nat} -> {auto ok : IsSucc n} -> Gmorph (PebComonadObj n g) (PebComonadObj n (PebComonadObj n g))
+comultPeb : {g : Graph} -> (n: Nat) -> {auto ok : IsSucc n} -> Gmorph (PebComonadObj n g) (PebComonadObj n (PebComonadObj n g))
 comultPeb {n = Z} {ok = ItIsSucc} impossible
 comultPeb {g = (t ** vs ** es ** eq)} {n = (S k)} {ok = p} = Gmor comultFunc (IsGraphMorphByElem prf)
     where   comultFunc : (pebPlaysType m t) -> (pebPlaysType m (pebPlaysType m t))
@@ -160,5 +160,13 @@ comultPeb {g = (t ** vs ** es ** eq)} {n = (S k)} {ok = p} = Gmor comultFunc (Is
             --     True = (pebblesRel {pebs = (S k)} (pebblesRel {pebs = (S k)} es)) (comultFunc a, comultFunc b)
             -- prf xs ys prfaesb = ?hole2
 
+coextensionPeb : {g1, g2 : Graph} -> (n : Nat) -> {auto ok : IsSucc n} -> Gmorph (PebComonadObj n g1) g2 -> 
+    Gmorph (PebComonadObj n g1) (PebComonadObj n g2)
+coextensionPeb Z {ok = ItIsSucc} morph impossible
+coextensionPeb (S k) {ok = p}   morph = ?pebext
+
 pebbleIndexedComonad : RIxCondComonad Graph GraphCat Nat IsSucc
 pebbleIndexedComonad = RIxCondComonadInfo pebbleFunctor counitPeb comultPeb
+
+pebbleIndexedComonadKleisli : RIxCondComonadKleisli Graph GraphCat Nat IsSucc
+pebbleIndexedComonadKleisli = RIxCondComonadKleisliInfo PebComonadObj counitPeb coextensionPeb

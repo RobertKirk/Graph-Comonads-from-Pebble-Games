@@ -1,11 +1,19 @@
 module ProofHelpers
 import Data.Fin
+import Data.Vect
 
 import src.NonEmptyList
 import src.NonEmptyStream
 
 %access public export
 %default total
+
+-- fintonatprf : finToNat (FS FZ) = 1
+-- fintonatprf = Refl
+
+-- vectorsInits : Vect n t -> Vect n (p ** Vect (finToNat p) t)
+-- vectorsInits Nil = Nil
+-- vectorsInits (x::xs) = (rewrite sym fintonatprf in ((FS FZ) ** (x::Nil))) :: map (\(p ** ys) => (FS p ** x::ys)) (vectorsInits xs) 
 
 mappedListsHaveSameLength : (f : t1 -> t2) -> (xs : List t1) -> (ys : List t2) -> map f xs = ys -> length xs = length ys
 mappedListsHaveSameLength f xs ys pf = rewrite sym pf in rewrite mapPreservesLength f xs in Refl

@@ -20,6 +20,12 @@ record RComonad (obj : Type) (cat : RCategory obj) where
     counit : {a : obj} -> (mor cat) (func comon a) a
     comult : {a : obj} -> (mor cat) (func comon a) (func comon (func comon a))
 
+record RComonadKleisli (obj : Type) (cat : RCategory obj) where
+    constructor RComonadKleisliInfo
+    mapping  : obj -> obj
+    counit   : {a : obj} -> (mor cat) (mapping a) a
+    coextend : {a, b : obj} -> (mor cat) (mapping a) b -> (mor cat) (mapping a) (mapping b)
+
 record RIxComonad (obj : Type) (cat : RCategory obj) (ind : Type) where
     constructor RIxComonadInfo
     indcomon : (k : ind) -> RFunctor obj cat
@@ -28,9 +34,9 @@ record RIxComonad (obj : Type) (cat : RCategory obj) (ind : Type) where
 
 record RIxComonadKleisli (obj : Type) (cat : RCategory obj) (ind : Type) where
     constructor RIxComonadKleisliInfo
-    indcomon : (k : ind) -> RFunctor obj cat
-    counit   : {a : obj} -> (k : ind) -> (mor cat) (func (indcomon k) a) a
-    coextend : {a, b : obj} -> (k : ind) -> (mor cat) (func (indcomon k) a) b -> (mor cat) (func (indcomon k) a) (func (indcomon k) b) 
+    mapping : (k : ind) -> obj -> obj
+    counit   : {a : obj} -> (k : ind) -> (mor cat) (mapping k a) a
+    coextend : {a, b : obj} -> (k : ind) -> (mor cat) (mapping k a) b -> (mor cat) (mapping k a) (mapping k b) 
 
 record RIxCondComonad (obj : Type) (cat : RCategory obj) (ind : Type) (cond : ind -> Type) where
     constructor RIxCondComonadInfo
@@ -41,23 +47,19 @@ record RIxCondComonad (obj : Type) (cat : RCategory obj) (ind : Type) (cond : in
 
 record RIxCondComonadKleisli (obj : Type) (cat : RCategory obj) (ind : Type) (cond : ind -> Type) where
     constructor RIxCondComonadKleisliInfo
-    indcomon : (k : ind) -> {pf : cond k} -> RFunctor obj cat
-    counit   : {a : obj} -> (k : ind) -> {p : cond k} -> (mor cat) ((func (indcomon k {pf = p})) a) a
-    coextend : {a, b : obj} -> (k : ind) -> {p : cond k} -> (mor cat) (func (indcomon k {pf = p}) a) b -> 
-        (mor cat) (func (indcomon k {pf = p}) a) ((func (indcomon k {pf = p})) b)
-
--- record RComonadKleisli (obj : Type) (cat : RCategory obj) where
---     constructor RComonadKleisliInfo
---     comon  : RFunctor obj cat
---     counit : {a : obj} -> (mor cat) ((func comon) a) a
---     coextend : (a, b : obj) -> (mor cat) ((func comon) a) b -> (mor cat) ((func comon) a) ((func comon) b)
+    mapping : (k : ind) -> {pf : cond k} -> obj -> obj
+    counit   : {a : obj} -> (k : ind) -> {p : cond k} -> (mor cat) (mapping k {pf = p} a) a
+    coextend : {a, b : obj} -> (k : ind) -> {p : cond k} -> (mor cat) (mapping k {pf = p} a) b -> 
+        (mor cat) (mapping k {pf = p} a) (mapping k {pf = p} b)
     
 -- standardToKleisliForm : RComonad obj cat -> RComonadKleisli obj cat
--- standardToKleisliForm (RComonadInfo comon counit comult) = RComonadKleisliInfo comon counit coextend
+-- standardToKleisliForm (RComonadInfo comon counit comult) = RComonadKleisliInfo (func comon) counit coextend
 --         where   coextend : (x, y : obj) -> (mor cat) ((func comon) x) y -> (mor cat) ((func comon) x) ((func comon) y)
 --                 coextend obj1 obj2 morph = 
---                     (comp cat) (func comon obj1) (func comon (func comon obj1)) (func comon obj2) ((fmap comon) (func comon obj1) obj2 morph) (comult  obj1)
+--                     (comp cat) ((fmap comon) morph) comult
 
+-- kleisliToStandardForm : RComonadKleisli obj cat -> RComonad obj cat
+-- kleisliToStandardForm (RComonadKleisliInfo mapping counit coextend) = RComonadInfo (RFunctorInfo mapping ((\f => coextend ((comp cat) f counit)))) counit (coextend (idd cat))
 
 -- IXstandardToKleisliForm : RIxComonad obj cat ind -> RIxComonadKleisli obj cat ind
 -- IXstandardToKleisliForm (RIxComonadInfo indcomon counit comult) = RIxComonadKleisliInfo indcomon counit coextend

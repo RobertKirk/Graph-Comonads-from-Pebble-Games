@@ -46,14 +46,36 @@ record RIxCondComonadKleisli (obj : Type) (cat : RCategory obj) (ind : Type) (co
     coextend : {a, b : obj} -> (k : ind) -> {p : cond k} -> (mor cat) (func (indcomon k {pf = p}) a) b -> 
         (mor cat) (func (indcomon k {pf = p}) a) ((func (indcomon k {pf = p})) b)
 
-standardToKleisliForm : RIxCondComonad obj cat ind cond -> RIxCondComonadKleisli obj cat ind cond
-standardToKleisliForm (RIxCondComonadInfo indcomon counit comult) = RIxCondComonadKleisliInfo indcomon counit coextend
-        where coextend : {x, y : obj} -> (k : ind) -> {p : cond k} ->
-                            (mor cat) ((func (indcomon k {pf = p})) x) y -> 
-                            (mor cat) (func (indcomon k {pf = p}) x) ((func (indcomon k {pf = p})) y)
-              coextend {x = ob1} {y = ob2} k morph = 
-                let test = ((comp cat) {a = func (indcomon k) ob1} {b = func (indcomon k) (func (indcomon k) ob1)} {c = func (indcomon k) ob2}) 
-                            (fmap (indcomon k) morph) (comult k) in ?hole
+-- record RComonadKleisli (obj : Type) (cat : RCategory obj) where
+--     constructor RComonadKleisliInfo
+--     comon  : RFunctor obj cat
+--     counit : {a : obj} -> (mor cat) ((func comon) a) a
+--     coextend : (a, b : obj) -> (mor cat) ((func comon) a) b -> (mor cat) ((func comon) a) ((func comon) b)
+    
+-- standardToKleisliForm : RComonad obj cat -> RComonadKleisli obj cat
+-- standardToKleisliForm (RComonadInfo comon counit comult) = RComonadKleisliInfo comon counit coextend
+--         where   coextend : (x, y : obj) -> (mor cat) ((func comon) x) y -> (mor cat) ((func comon) x) ((func comon) y)
+--                 coextend obj1 obj2 morph = 
+--                     (comp cat) (func comon obj1) (func comon (func comon obj1)) (func comon obj2) ((fmap comon) (func comon obj1) obj2 morph) (comult  obj1)
+
+
+-- IXstandardToKleisliForm : RIxComonad obj cat ind -> RIxComonadKleisli obj cat ind
+-- IXstandardToKleisliForm (RIxComonadInfo indcomon counit comult) = RIxComonadKleisliInfo indcomon counit coextend
+--     where   coextend : {x, y : obj} -> (k : ind) -> (mor cat) ((func (indcomon k)) x) y -> 
+--                             (mor cat) ((func (indcomon k)) x) ((func (indcomon k)) y)
+--             coextend k morph = (comp cat) ((fmap (indcomon k)) morph) (comult k)
+
+-- IXCondStandardToKleisliForm : RIxCondComonad obj cat ind cond -> RIxCondComonadKleisli obj cat ind cond
+-- IXCondStandardToKleisliForm (RIxCondComonadInfo indcomon counit comult) = RIxCondComonadKleisliInfo indcomon counit coextend
+--         where   coextend : {x, y : obj} -> (k : ind) -> {p : cond k} ->
+--                             (mor cat) ((func (indcomon k {pf = p})) x) y -> 
+--                             (mor cat) ((func (indcomon k {pf = p})) x) ((func (indcomon k {pf = p})) y)
+--                 coextend {x = ob1} {y = ob2} k morph = 
+--                     let test = (fmap (indcomon k)) in ?hole
+                -- testing : {x, y : obj} -> (k : ind) -> {p : cond k} ->
+                --     (mor cat) ((func (indcomon k {pf = p})) x) y -> 
+                --     (mor cat) ((func (indcomon k)) ((func (indcomon k)) x)) ((func (indcomon k)) y)
+                -- testing {x = ob1} {y = ob2} k morph = (fmap (indcomon k)) morph
 
 -- Categories with morphism application and object elements for checking of axioms
 record RAppCategory (obj : Type) where

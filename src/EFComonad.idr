@@ -99,7 +99,7 @@ morphExtend : (EFplaysType (S j) t1 -> t2) -> EFplaysType (S j) t1 -> EFplaysTyp
 morphExtend morph (MkPlays FZ {ok = ItIsFSucc} xs) impossible
 morphExtend morph (MkPlays (FS k) {ok = p}    xs) = MkPlays (FS k) {ok = p} (map morph (playInits xs))
     where   playInits : Vect (finToNat (FS k)) t -> Vect (finToNat (FS k)) (EFplaysType (S j) t)
-            playInits plays = ?hole --map (\(l ** ps) => MkPlays (restrict (finToNat (FS k)) (toIntegerNat l)) {ok = believe_me True} ps) (vectorsInits plays)
+            playInits plays = ?hole --map (\(l ** ps) => MkPlays (natToFin l (finToNat (FS k)) {ok = (believe_me _)}) {ok = (believe_me _)} (rewrite vectInj (finToNatToFin l (FS k) (believe_me True)) in ps)) (vectorsInits plays)
 
 coextensionEF : {sigma : Signature} -> {s1, s2 : Structure sigma} -> (bound : Nat) -> {auto ok : IsSucc bound} -> 
     StructMorph (EFComonadObj bound s1) s2 -> StructMorph (EFComonadObj bound s1) (EFComonadObj bound s2)

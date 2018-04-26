@@ -8,12 +8,24 @@ import src.NonEmptyStream
 %access public export
 %default total
 
--- fintonatprf : finToNat (FS FZ) = 1
--- fintonatprf = Refl
+natToFin : (l, b : Nat) -> {auto ok : LTE (S l) b} -> Fin b
+natToFin Z Z {ok = p} impossible
+natToFin Z (S k) {ok = p} = FZ
+natToFin (S k) Z {ok = p} impossible
+natToFin (S l) (S j) {ok = (LTESucc p)} = FS (natToFin l j {ok = p})
 
--- vectorsInits : Vect n t -> Vect n (p ** Vect (finToNat p) t)
--- vectorsInits Nil = Nil
--- vectorsInits (x::xs) = (rewrite sym fintonatprf in ((FS FZ) ** (x::Nil))) :: map (\(p ** ys) => (FS p ** x::ys)) (vectorsInits xs) 
+vectInj : p = q -> Vect p t = Vect q t
+vectInj Refl = Refl
+
+finToNatToFin : (l: Nat) -> (b : Fin k) -> (p : LTE (S l) (finToNat b)) -> finToNat (natToFin l (finToNat  b) {ok = p}) = l
+finToNatToFin Z FZ (LTEZero) impossible
+finToNatToFin Z (FS k) prf = Refl
+finToNatToFin (S k) FZ (LTESucc p) impossible
+finToNatToFin (S k) (FS b) (LTESucc p) = eqSucc _ _ (finToNatToFin k b p)
+ 
+vectorsInits : Vect n t -> Vect n (p ** Vect p t)
+vectorsInits Nil = Nil
+vectorsInits (x::xs) = ((S Z) ** (x::Nil)) :: map (\(p ** ys) => (S p ** x::ys)) (vectorsInits xs) 
 
 mappedListsHaveSameLength : (f : t1 -> t2) -> (xs : List t1) -> (ys : List t2) -> map f xs = ys -> length xs = length ys
 mappedListsHaveSameLength f xs ys pf = rewrite sym pf in rewrite mapPreservesLength f xs in Refl

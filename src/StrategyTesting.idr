@@ -23,7 +23,7 @@ dimSwap (_, []) = []
 dimSwap ((x::xs), (y::ys)) = (x,y)::(dimSwap (xs, ys))
 
 generateGamesEF : (rounds : Nat) -> {auto ok : IsSucc rounds} -> (sigma : Signature) -> (s1, s2 : Structure sigma) -> 
-    StructMorph (EFComonadObj rounds s1) s2 -> NEStream (List (getType s1, getType s2))
+    StructMorph (EFComonadObj rounds s1) s2 -> NEList (List (getType s1, getType s2))
 generateGamesEF Z {ok = ItIsSucc} s s1 s2 morph impossible
 generateGamesEF (S k) {ok = p} sig (t1 ** vs1 ** interp1 ** eq1) (t2 ** vs2 ** interp2 ** eq2) morph = case (coextensionEF (S k) morph) of
     Smor mapping prof => (map (\pl => dimSwap (getList pl, getList (mapping pl))) (efplays (S k) vs1 ))
@@ -36,8 +36,8 @@ Ex1Next Two = Three
 Ex1Next Three = Four
 Ex1Next Four = One
 
-enumEx1Universe : NEStream Ex1Universe
-enumEx1Universe = listToNEStream [One, Two, Three, Four]
+enumEx1Universe : NEList Ex1Universe
+enumEx1Universe = listToNEL [One, Two, Three, Four]
 
 Ex1Rel1 : Fin 1 -> Rel Ex1Universe
 Ex1Rel1 FZ (One, Two) = True
@@ -52,7 +52,7 @@ Ex1Rel2 FZ (Three, Four) = True
 Ex1Rel2 FZ (Four, One) = True
 Ex1Rel2 FZ _ = False
 
-[Ex1Equality] Eq Ex1Universe where
+implementation [Ex1Equality] Eq Ex1Universe where
     (==) One One = True
     (==) Two Two = True
     (==) Three Three = True
@@ -65,15 +65,17 @@ Ex1Structure1 = (Ex1Universe ** enumEx1Universe ** Ex1Rel1 ** Ex1Equality)
 Ex1Structure2 : Structure 1
 Ex1Structure2 = (Ex1Universe ** enumEx1Universe ** Ex1Rel2 ** Ex1Equality)
 
-Ex1plays : NEStream (EFplaysType 2 Ex1Universe)
+Ex1plays : NEList (EFplaysType 2 Ex1Universe)
 Ex1plays = efplays 2 enumEx1Universe
 
-Ex1Strategy : Eq Ex1Universe => getType (EFComonadObj 2 Ex1Structure1) -> Ex1Universe
+Ex1Strategy : EFplaysType 2 Ex1Universe -> Ex1Universe
 Ex1Strategy (MkPlays (FS FZ) [x]) = One
 Ex1Strategy (MkPlays (FS (FS FZ)) [x, y]) = 
-    if ((Ex1Next x) == y) then Two else 
-    if ((Ex1Next y)) == x then Four else
+    if ((==) @{Ex1Equality} (Ex1Next x) y) then Two else 
+    if ((==) @{Ex1Equality} (Ex1Next y) x) then Four else
     Three
 
-Ex1StrategyMorph : Eq Ex1Universe => StructMorph (EFComonadObj 2 Ex1Structure1) Ex1Structure2
-Ex1StrategyMorph = ?hole
+Ex1StrategyMorph : StructMorph (EFComonadObj 2 Ex1Structure1) Ex1Structure2
+Ex1StrategyMorph = Smor Ex1Strategy (ItIsStructMorph prf)
+        where prf : (k : Fin 1) -> IsGraphMorph Ex1Strategy (efInterp @{Ex1Equality} 2 Ex1Rel1 k) (Ex1Rel2 k)
+              prf FZ = IsGraphMorphByElem ?strat

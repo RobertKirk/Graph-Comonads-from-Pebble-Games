@@ -32,18 +32,18 @@ efWeakenN m (MkPlays (FS j) {ok = p} xs) = MkPlays (FS (weakenN m j)) (rewrite s
 [EFplaysTypeEq] Eq t => Eq (EFplaysType n t) where
     (==) (MkPlays k xs) (MkPlays j ys) = k == j && toList xs == toList ys
 
-initial :  NEStream t -> NEStream (EFplaysType 1 t)
+initial :  NEList t -> NEList (EFplaysType 1 t)
 initial xs = map (\x => MkPlays (FS FZ) [x]) xs
 
-uplength : NEStream t -> (n : Nat) -> NEStream (EFplaysType n t) -> NEStream (EFplaysType (S n) t)
-uplength xs n plays = concatNESofNES (map (\(MkPlays len play) => (map (\el => MkPlays (FS len) (el::play)) xs)) plays)
+uplength : NEList t -> (n : Nat) -> NEList (EFplaysType n t) -> NEList (EFplaysType (S n) t)
+uplength xs n plays = concatNELofNEL (map (\(MkPlays len play) => (map (\el => MkPlays (FS len) (el::play)) xs)) plays)
 
-efplays : (bound : Nat) -> {auto ok : IsSucc bound} -> NEStream t -> NEStream (EFplaysType bound t)
+efplays : (bound : Nat) -> {auto ok : IsSucc bound} -> NEList t -> NEList (EFplaysType bound t)
 efplays Z {ok = ItIsSucc}  xs impossible
 efplays (S Z) {ok = p}     xs = initial xs
 efplays (S (S k)) {ok = p} xs = myIt 1 (LTESucc (LTESucc LTEZero)) (uplength xs) (initial xs)
-    where myIt : (start : Nat) -> LTE (S start) (S (S k)) -> ((n : Nat) -> NEStream (EFplaysType n t) -> NEStream (EFplaysType (S n) t)) -> 
-            NEStream (EFplaysType start t) -> NEStream (EFplaysType (S (S k)) t)
+    where myIt : (start : Nat) -> LTE (S start) (S (S k)) -> ((n : Nat) -> NEList (EFplaysType n t) -> NEList (EFplaysType (S n) t)) -> 
+            NEList (EFplaysType start t) -> NEList (EFplaysType (S (S k)) t)
           myIt start LTEZero f xs impossible
           myIt start (LTESucc startLTProof) f xs with (isLTE (S start) (S k)) proof p
             | Yes prfSStart = ap (rewrite sym (plusMinusProof start (S (S k)) (lteSuccRight startLTProof)) in 
@@ -53,7 +53,7 @@ efplays (S (S k)) {ok = p} xs = myIt 1 (LTESucc (LTESucc LTEZero)) (uplength xs)
                             (rewrite sym (lteToEqual (S start) (S (S k)) (LTESucc startLTProof) (\(LTESucc p) => contra p)) in (f start xs))
 
 efRelPrefix : Eq t => Vect j t -> Vect k t -> Bool
-efRelPrefix {j = n} {k = m}xs ys with (isLTE n m)
+efRelPrefix {j = n} {k = m} xs ys with (isLTE n m)
     | Yes prf = isPrefixOf xs ys
     | No contra = isPrefixOf ys xs
 

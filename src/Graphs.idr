@@ -61,7 +61,7 @@ Interpretation sig t = (Fin sig) -> (Rel t)
 Structure : Signature -> Type
 Structure sig =
     DPair Type $ \t =>
-    DPair (NEStream t) $ \vs =>
+    DPair (NEList t) $ \vs =>
     DPair (Interpretation sig t) $ \es =>
     Eq t
 

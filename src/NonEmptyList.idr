@@ -93,6 +93,19 @@ find p (x:<:xs) =
   else
     find p xs
 
+listToNEL : (xs : List t) -> {auto ok : NonEmpty xs} -> NEList t
+listToNEL [] {ok = IsNonEmpty} impossible
+listToNEL [x] = Singl x
+listToNEL (x::y::ys) = x :<: (listToNEL (y::ys))
+
+ap : NEList t -> NEList t -> NEList t
+ap (Singl x) xs = x:<:xs
+ap (x:<:xs) ys = x:<:(ap xs ys)
+ 
+concatNELofNEL : NEList (NEList t) -> NEList t
+concatNELofNEL (Singl x) = x
+concatNELofNEL (x:<:xs) = ap x (concatNELofNEL xs)
+
 NEListIsNonEmpty : (ys : NEList t) -> NonEmpty (toList ys)
 NEListIsNonEmpty (Singl x) = IsNonEmpty 
 NEListIsNonEmpty (x:<:xs) = IsNonEmpty

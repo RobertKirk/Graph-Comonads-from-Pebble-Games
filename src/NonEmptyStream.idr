@@ -69,3 +69,7 @@ concatNESofNES (x:>:xs) = case x of
 
 concatNESofNEL : NEStream (NEList t) -> NEStream t
 concatNESofNEL xs = concatNESofNES (map NELtoNES xs)
+
+NESToList : NEStream t -> List t 
+NESToList (Sing x) = [x]
+NESToList (x:>:xs) = x :: (assert_total (NESToList xs))

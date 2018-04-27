@@ -41,15 +41,16 @@ uplength xs n plays = concatNESofNES (map (\(MkPlays len play) => (map (\el => M
 efplays : (bound : Nat) -> {auto ok : IsSucc bound} -> NEStream t -> NEStream (EFplaysType bound t)
 efplays Z {ok = ItIsSucc}  xs impossible
 efplays (S Z) {ok = p}     xs = initial xs
-efplays (S (S k)) {ok = p} xs = assert_total (myIt 1 (LTESucc (LTESucc LTEZero)) (uplength xs) (initial xs))
+efplays (S (S k)) {ok = p} xs = myIt 1 (LTESucc (LTESucc LTEZero)) (uplength xs) (initial xs)
     where myIt : (start : Nat) -> LTE (S start) (S (S k)) -> ((n : Nat) -> NEStream (EFplaysType n t) -> NEStream (EFplaysType (S n) t)) -> 
             NEStream (EFplaysType start t) -> NEStream (EFplaysType (S (S k)) t)
           myIt start LTEZero f xs impossible
           myIt start (LTESucc startLTProof) f xs with (isLTE (S start) (S k)) proof p
             | Yes prfSStart = ap (rewrite sym (plusMinusProof start (S (S k)) (lteSuccRight startLTProof)) in 
                                 (map (efWeakenN ((-) {smaller = lteSuccLeft ((LTESucc startLTProof))} (S (S k)) start)) xs))
-                                (myIt (S start) (LTESucc prfSStart) f (f start xs))
-            | No contra = rewrite sym (lteToEqual (S start) (S (S k)) (LTESucc startLTProof) (\(LTESucc p) => contra p)) in (f start xs)
+                                (assert_total (myIt (S start) (LTESucc prfSStart) f (f start xs)))
+            | No contra = ap (map efWeaken (rewrite sym (lteToEqual start (S k) (startLTProof) (\p => contra p)) in xs))
+                            (rewrite sym (lteToEqual (S start) (S (S k)) (LTESucc startLTProof) (\(LTESucc p) => contra p)) in (f start xs))
 
 efRelPrefix : Eq t => Vect j t -> Vect k t -> Bool
 efRelPrefix {j = n} {k = m}xs ys with (isLTE n m)

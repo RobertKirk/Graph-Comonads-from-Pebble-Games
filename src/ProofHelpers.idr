@@ -38,17 +38,17 @@ mapPreservesNonEmpty : (f : a -> b) -> (xs : List a) -> NonEmpty xs -> NonEmpty 
 mapPreservesNonEmpty f [] IsNonEmpty impossible
 mapPreservesNonEmpty f (y::ys) pf = IsNonEmpty
 
-andTrueImpliesConjunctsTrueL : {a : Bool} -> True = a && b -> True = a
-andTrueImpliesConjunctsTrueL {a = True}  prf = Refl
-andTrueImpliesConjunctsTrueL {a = False} Refl impossible
+conjunctsTrueL : {a : Bool} -> True = a && b -> True = a
+conjunctsTrueL {a = True}  prf = Refl
+conjunctsTrueL {a = False} Refl impossible
 
 andIsCommutative : (a : Bool) -> (b : Bool) -> True = a && b -> True = b && a
 andIsCommutative False b     Refl impossible
 andIsCommutative True  False Refl impossible
 andIsCommutative True  True  prf  = Refl
 
-andTrueImpliesConjunctsTrueR : {b : Bool} -> True = a && b -> True = b
-andTrueImpliesConjunctsTrueR {a = x} {b = y} prf = andTrueImpliesConjunctsTrueL {a = y} (andIsCommutative x y prf)
+conjunctsTrueR : {b : Bool} -> True = a && b -> True = b
+conjunctsTrueR {a = x} {b = y} prf = conjunctsTrueL {a = y} (andIsCommutative x y prf)
 
 andCombines : (a : Bool) -> (b : Bool) -> True = a -> True = b -> True = a && b
 andCombines True  True  prfa prfb = Refl
@@ -127,3 +127,9 @@ lteToEqual (S k) Z LTEZero prf2 impossible
 lteToEqual (S k) Z (LTESucc p) prf2 impossible
 lteToEqual Z (S k) LTEZero prf2 = void (prf2 (LTESucc LTEZero))
 lteToEqual (S k) (S j) (LTESucc p) prf2 = eqSucc k j (lteToEqual k j p (prf2 . LTESucc))
+
+pairsSplitL : {a, b, c, d : t} -> (a, b) = (c, d) -> a = c
+pairsSplitL prf = cong {f = fst} prf
+
+pairsSplitR : {a, b, c, d : t} -> (a, b) = (c, d) -> b = d
+pairsSplitR prf = cong {f = snd} prf

@@ -112,18 +112,18 @@ PebComonadMorphProof (S k) {ok = p} e1 e2 vmap (IsGraphMorphByElem vmapIsGraphMo
         | LT = 
             andCombines (pebblesRelSuffix (pebmap vmap xs) (pebmap vmap ys))
                         (e2 (snd (last (pebmap vmap xs)), snd (last (pebmap vmap ys))))
-                        (PebComonadMorphLTProof (S k) {ok = p} xs ys vmap compPrf (andTrueImpliesConjunctsTrueL e1relprf))
-                        (PebComonadMorphSndProof e1 e2 xs ys vmap (IsGraphMorphByElem vmapIsGraphMorph) (andTrueImpliesConjunctsTrueR e1relprf))
+                        (PebComonadMorphLTProof (S k) {ok = p} xs ys vmap compPrf (conjunctsTrueL e1relprf))
+                        (PebComonadMorphSndProof e1 e2 xs ys vmap (IsGraphMorphByElem vmapIsGraphMorph) (conjunctsTrueR e1relprf))
         | GT = 
             andCombines (pebblesRelSuffix (pebmap vmap xs) (pebmap vmap ys))
                         (e2 (snd (last (pebmap vmap xs)), snd (last (pebmap vmap ys))))
-                        (PebComonadMorphGTProof (S k) {ok = p} xs ys vmap compPrf (andTrueImpliesConjunctsTrueL e1relprf))
-                        (PebComonadMorphSndProof e1 e2 xs ys vmap (IsGraphMorphByElem vmapIsGraphMorph) (andTrueImpliesConjunctsTrueR e1relprf))
+                        (PebComonadMorphGTProof (S k) {ok = p} xs ys vmap compPrf (conjunctsTrueL e1relprf))
+                        (PebComonadMorphSndProof e1 e2 xs ys vmap (IsGraphMorphByElem vmapIsGraphMorph) (conjunctsTrueR e1relprf))
         | EQ = 
             andCombines (pebblesRelSuffix (pebmap vmap xs) (pebmap vmap ys))
                         (e2 (snd (last (pebmap vmap xs)), snd (last (pebmap vmap ys))))
-                        (PebComonadMorphEQProof (S k) {ok = p} xs ys vmap compPrf (andTrueImpliesConjunctsTrueL e1relprf))
-                        (PebComonadMorphSndProof e1 e2 xs ys vmap (IsGraphMorphByElem vmapIsGraphMorph) (andTrueImpliesConjunctsTrueR e1relprf))
+                        (PebComonadMorphEQProof (S k) {ok = p} xs ys vmap compPrf (conjunctsTrueL e1relprf))
+                        (PebComonadMorphSndProof e1 e2 xs ys vmap (IsGraphMorphByElem vmapIsGraphMorph) (conjunctsTrueR e1relprf))
 
 PebComonadMorph : {g1, g2 : Graph} -> (pebs : Nat) -> {auto ok : IsSucc pebs} -> Gmorph g1 g2 -> Gmorph (PebComonadObj pebs g1) (PebComonadObj pebs g2)
 PebComonadMorph Z morp {ok = ItIsSucc} impossible
@@ -145,7 +145,7 @@ counitPeb {g = (t ** vs ** es ** eq)} {n = (S k)} {ok = p} = Gmor counitFunc (Is
             counitFunc ps = snd (last ps)
             prf : (a : pebPlaysType (S k) t) -> (b : pebPlaysType (S k) t) -> True = (pebblesRel {pebs = (S k)} es) (a,b) -> 
                 True = es (counitFunc a, counitFunc b)
-            prf xs ys prfaesb = andTrueImpliesConjunctsTrueR prfaesb
+            prf xs ys prfaesb = conjunctsTrueR prfaesb
 
 -- comultPebProof : (a : pebPlaysType (S k) t) -> (b : pebPlaysType (S k) t) -> True = (pebblesRel {pebs = (S k)} es) (a,b) -> 
 --     True = (pebblesRel {pebs = (S k)} (pebblesRel {pebs = (S k)} es)) (comultFunc a, comultFunc b)

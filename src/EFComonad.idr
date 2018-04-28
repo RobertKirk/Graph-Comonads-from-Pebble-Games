@@ -92,7 +92,7 @@ counitEF {sigma = (S sig)} {s = (t ** vs ** interp ** eqt)} (S k) {ok = p} = Smo
     where   intprf : (a, b : EFplaysType (S k) t) -> True = efRel r (a, b) -> True = r (counitFunc a, counitFunc b)
             intprf (MkPlays FZ {ok = ItIsFSucc} xs) p proof1 impossible
             intprf q (MkPlays FZ {ok = ItIsFSucc} xs) proof1 impossible
-            intprf (MkPlays (FS lx) {ok = p} xs) (MkPlays (FS ly) {ok = q} ys) proof1 = andTrueImpliesConjunctsTrueL proof1
+            intprf (MkPlays (FS lx) {ok = p} xs) (MkPlays (FS ly) {ok = q} ys) proof1 = conjunctsTrueL proof1
             prf : (rel : Fin (S sig)) -> IsGraphMorph EFComonad.counitFunc (efInterp (S k) interp rel) (interp rel)
             prf rel = IsGraphMorphByElem intprf
 

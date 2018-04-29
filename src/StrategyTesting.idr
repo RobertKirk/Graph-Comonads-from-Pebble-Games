@@ -214,14 +214,15 @@ stratProof (MkPlays (FS FZ) [y]) (MkPlays (FS (FS FZ)) (x::[xl])) prf with ((==)
         let test = intStratProof3 x1' x2 x3 in sym (intStratProof2 xl test)
     | (True, False)  = Refl
     | (True, True)   = void (ex1NoMutualNext x xl (pairsSplitL p) (pairsSplitR p))
-stratProof (MkPlays (FS (FS FZ)) (x::[xl])) (MkPlays (FS (FS FZ)) (y::[yl])) prf with ((==) @{Ex1Equality} (Ex1Next x) xl, (==) @{Ex1Equality} (Ex1Next xl) x) proof p
-    | (False, False) = ?strat
-    | (True, False)  = ?strat1
-    | (False, True)  = ?strat2
-    | (True, True)   = ?strat3
-
+stratProof (MkPlays (FS (FS FZ)) (x::[xl])) (MkPlays (FS (FS FZ)) (y::[yl])) prf = 
+    let x1 = ex1rel1ImpliesNext xl yl (conjunctsTrueL prf {a = Ex1Rel1 FZ (xl, yl)}) in
+    let x2 = ex1EqCorrect xl yl (conjunctsTrueL (conjunctsTrueR (conjunctsTrueR prf))) in
+    void (ex1NextChanges xl (sym (trans x1 (sym x2))))
 
 Ex1StrategyMorph : StructMorph (EFComonadObj 2 Ex1Structure1) Ex1Structure2
 Ex1StrategyMorph = Smor Ex1Strategy (ItIsStructMorph prf)
         where prf : (k : Fin 1) -> IsGraphMorph Ex1Strategy (efInterp @{Ex1Equality} 2 Ex1Rel1 k) (Ex1Rel2 k)
               prf FZ = IsGraphMorphByElem stratProof
+
+Ex1Games : NEList (List (Ex1Universe, Ex1Universe))
+Ex1Games = generateGamesEF 2 1 Ex1Structure1 Ex1Structure2 Ex1StrategyMorph

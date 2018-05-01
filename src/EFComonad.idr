@@ -73,13 +73,17 @@ EFComonadObj (S k) {ok = p} (t ** vs ** interp ** eqt) =
     efInterp (S k) interp **
     EFplaysTypeEq)
 
--- EFComonadMorph : (bound : Nat) -> {auto ok : IsSucc bound} -> StructMorph s1 s2 -> StructMorph (EFComonadObj bound s1) (EFComonadObj bound s2)
--- EFComonadMorph Z {ok = ItIsSucc} smorph impossible
--- EFComonadMorph (S k) {ok = p} (Smor f prf) = ?holeMorph
+efMap : (bound : Nat) -> {auto ok : IsSucc bound} -> (t1 -> t2) -> EFplaysType bound t1 -> EFplaysType bound t2
+efMap Z {ok = ItIsSucc} morph xs impossible
+efMap (S k) {ok = p}    morph (MkPlays l xs) = MkPlays l (map morph xs)
 
--- EFFunctor : (bound : Nat) -> {auto ok : IsSucc bound} -> RFunctor (Structure sigma) (StructCat sigma)
--- EFFunctor Z {ok = ItIsSucc} impossible
--- EFFunctor (S k) {ok = p} = RFunctorInfo (EFComonadObj (S k)) (EFComonadMorph (S k))
+EFComonadMorph : (bound : Nat) -> {auto ok : IsSucc bound} -> StructMorph s1 s2 -> StructMorph (EFComonadObj bound s1) (EFComonadObj bound s2)
+EFComonadMorph Z {ok = ItIsSucc} smorph impossible
+EFComonadMorph (S k) {ok = p} (Smor f prf) = Smor (efMap (S k) {ok = p} f) ?prf
+
+EFFunctor : (bound : Nat) -> {auto ok : IsSucc bound} -> RFunctor (Structure sigma) (StructCat sigma)
+EFFunctor Z {ok = ItIsSucc} impossible
+EFFunctor (S k) {ok = p} = RFunctorInfo (EFComonadObj (S k)) (EFComonadMorph (S k))
 
 counitFunc : EFplaysType (S k) t -> t
 counitFunc (MkPlays FZ {ok = ItIsFSucc} xs) impossible
@@ -96,19 +100,34 @@ counitEF {sigma = (S sig)} {s = (t ** vs ** interp ** eqt)} (S k) {ok = p} = Smo
             prf : (rel : Fin (S sig)) -> IsGraphMorph EFComonad.counitFunc (efInterp (S k) interp rel) (interp rel)
             prf rel = IsGraphMorphByElem intprf
 
-morphExtend : (EFplaysType (S j) t1 -> t2) -> EFplaysType (S j) t1 -> EFplaysType (S j) t2
-morphExtend morph (MkPlays FZ {ok = ItIsFSucc} xs) impossible
-morphExtend morph (MkPlays (FS k) {ok = p}    xs) = MkPlays (FS k) {ok = p} (map morph (playInits xs))
-    where   playInits : Vect (finToNat (FS k)) t -> Vect (finToNat (FS k)) (EFplaysType (S j) t)
-            playInits plays = ?hole --map (\(l ** ps) => MkPlays (natToFin l (finToNat (FS k)) {ok = (believe_me _)}) {ok = (believe_me _)} (rewrite vectInj (finToNatToFin l (FS k) (believe_me True)) in ps)) (vectorsInits plays)
+playInits : (m, n : Nat) -> {auto ok1 : IsSucc m} -> {auto ok2 : IsSucc n} -> Vect n t -> Vect n (EFplaysType m t)
+playInits Z n {ok1 = ItIsSucc} xs impossible
+playInits (S j) Z {ok1 = p} {ok2 = ItIsSucc} xs impossible
+playInits (S j) (S Z) {ok1 = p} {ok2 = q} [x] = [MkPlays (FS FZ) [x]]
+playInits (S Z) (S (S k)) {ok1 = p} {ok2 = q} (x ::xs) = (MkPlays (FS FZ) [x]) :: (playInits (S Z) (S k) xs)
+playInits (S (S j)) (S (S k)) {ok1 = p} {ok2 = q} (x::xs) = 
+    (MkPlays (FS FZ) [x]) :: (map (\(MkPlays l ys) => MkPlays (FS l) (x::ys)) (playInits (S j) (S k) xs))
+
+morphExtend : ((EFplaysType (S j) t1) -> t2) -> EFplaysType (S j) t1 -> EFplaysType (S j) t2
+morphExtend {j = bnd} morph (MkPlays FZ {ok = ItIsFSucc} xs) impossible
+morphExtend {j = bnd} morph (MkPlays (FS k) {ok = p}     xs) = MkPlays (FS k) {ok = p} (map morph (playInits (S bnd) (S (finToNat k)) xs))
+
+coextPrf : Eq t1 => Eq t2 => (rel1 : Rel t1) -> (rel2 : Rel t2) -> (f : EFplaysType (S j) t1 -> t2) -> 
+    IsGraphMorph morph (efRel rel1) rel2 -> (a : EFplaysType (S j) t1) -> (b : EFplaysType (S j) t1) -> 
+    True = efRel rel1 (a, b) -> True = efRel rel2 (morphExtend f a, morphExtend f b)
+coextPrf rel1 rel2 morph gmorphPrf (MkPlays FZ {ok = ItIsFSucc {k = FZ}} xs) pys relPrf impossible
+coextPrf rel1 rel2 morph gmorphPrf xys (MkPlays FZ {ok = ItIsFSucc} ys) relPrf impossible
+coextPrf rel1 rel2 morph (IsGraphMorphByElem gmorphPrf) (MkPlays (FS l1) xs) (MkPlays (FS l2) ys) relPrf = ?hole
 
 coextensionEF : {sigma : Signature} -> {s1, s2 : Structure sigma} -> (bound : Nat) -> {auto ok : IsSucc bound} -> 
     StructMorph (EFComonadObj bound s1) s2 -> StructMorph (EFComonadObj bound s1) (EFComonadObj bound s2)
 coextensionEF Z {ok = ItIsSucc} morph impossible
 coextensionEF {sigma = Z} {s1 = (t1 ** vs1 ** interp1 ** eqt1)} {s2 = (t2 ** vs2 ** interp2 ** eqt2)} (S j) {ok = p} (Smor morph prof) = Smor (morphExtend morph) (EmptySigStructMorph Refl)
-coextensionEF {sigma = S sig} (S j) {ok = p} morph = ?coext2 -- Smor morphExtend (ItIsStructMorph prf)
---     where   prf = ?prf
---             morphExtend = ?mext1
+coextensionEF {sigma = S sig} {s1 = (t1 ** vs1 ** interp1 ** eqt1)} {s2 = (t2 ** vs2 ** interp2 ** eqt2)} (S j) {ok = p} (Smor morph (EmptySigStructMorph reflp)) = absurd (sym reflp)
+coextensionEF {sigma = S sig} {s1 = (t1 ** vs1 ** interp1 ** eqt1)} {s2 = (t2 ** vs2 ** interp2 ** eqt2)} (S j) {ok = p} (Smor morph (ItIsStructMorph strutPrf)) = 
+    Smor (morphExtend morph) (ItIsStructMorph prf)
+            where   prf : (k : Fin (S sig)) -> IsGraphMorph (morphExtend morph) (efRel (interp1 k)) (efRel (interp2 k))
+                    prf k = IsGraphMorphByElem (coextPrf {j = j} (interp1 k) (interp2 k) morph (strutPrf k)) 
 
 EFIndexedComonadKleisli : {sigma : Signature} -> RIxCondComonadKleisli (Structure sigma) (StructCat sigma) Nat IsSucc
 EFIndexedComonadKleisli = RIxCondComonadKleisliInfo EFComonadObj counitEF coextensionEF

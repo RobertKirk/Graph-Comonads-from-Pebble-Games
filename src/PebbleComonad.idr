@@ -160,13 +160,19 @@ comultPeb {g = (t ** vs ** es ** eq)} {n = (S k)} {ok = p} = Gmor comultFunc (Is
             --     True = (pebblesRel {pebs = (S k)} (pebblesRel {pebs = (S k)} es)) (comultFunc a, comultFunc b)
             -- prf xs ys prfaesb = ?hole2
 
+pebbleIndexedComonad : RIxCondComonad Graph GraphCat Nat IsSucc
+pebbleIndexedComonad = RIxCondComonadInfo pebbleFunctor counitPeb comultPeb
+
+pebmorphExtend : (pebs : Nat) -> {auto ok : IsSucc pebs} -> ((pebPlaysType pebs t1) -> t2) -> pebPlaysType pebs t1 -> pebPlaysType pebs t2
+pebmorphExtend Z {ok = IsSucc} f plays impossible
+pebmorphExtend (S k) morph plays = zip (map fst plays) (map morph (inits plays))
+
 coextensionPeb : {g1, g2 : Graph} -> (n : Nat) -> {auto ok : IsSucc n} -> Gmorph (PebComonadObj n g1) g2 -> 
     Gmorph (PebComonadObj n g1) (PebComonadObj n g2)
 coextensionPeb Z {ok = ItIsSucc} morph impossible
-coextensionPeb (S k) {ok = p}   morph = ?pebext
-
-pebbleIndexedComonad : RIxCondComonad Graph GraphCat Nat IsSucc
-pebbleIndexedComonad = RIxCondComonadInfo pebbleFunctor counitPeb comultPeb
+coextensionPeb {g1 = (t1 ** v1 ** e1 ** eq1)} {g2 = (t2 ** v2 ** e2 ** eq2)} (S k) {ok = p} (Gmor morph prf) = 
+    Gmor (pebmorphExtend (S k) {ok = p} morph) prof 
+        where prof = ?hole
 
 pebbleIndexedComonadKleisli : RIxCondComonadKleisli Graph GraphCat Nat IsSucc
 pebbleIndexedComonadKleisli = RIxCondComonadKleisliInfo PebComonadObj counitPeb coextensionPeb

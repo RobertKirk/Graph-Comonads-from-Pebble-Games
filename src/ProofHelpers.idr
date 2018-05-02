@@ -8,17 +8,36 @@ import src.NonEmptyStream
 %access public export
 %default total
 
-natToFin : (l, b : Nat) -> {auto ok : LTE (S l) b} -> Fin b
-natToFin Z Z {ok = p} impossible
-natToFin Z (S k) {ok = p} = FZ
-natToFin (S k) Z {ok = p} impossible
-natToFin (S l) (S j) {ok = (LTESucc p)} = FS (natToFin l j {ok = p})
+data IsFSucc : Fin k -> Type where
+    ItIsFSucc : IsFSucc (FS k)
 
-finToNatToFin : (l: Nat) -> (b : Fin k) -> (p : LTE (S l) (finToNat b)) -> finToNat (natToFin l (finToNat  b) {ok = p}) = l
-finToNatToFin Z FZ (LTEZero) impossible
-finToNatToFin Z (FS k) prf = Refl
-finToNatToFin (S k) FZ (LTESucc p) impossible
-finToNatToFin (S k) (FS b) (LTESucc p) = eqSucc _ _ (finToNatToFin k b p)
+vlast : {n : Nat} -> {auto ok : IsSucc n} -> Vect n t -> t
+vlast {n = Z} {ok = ItIsSucc} xs impossible
+vlast {n = S k} {ok = p} Nil impossible
+vlast {n = S Z} {ok = p} [x] = x
+vlast {n = S (S k)} {ok = p} (x::y::xs) = vlast {n = (S k)} (y::xs)
+
+finToNatLTBound : (n : Nat) -> (k : Fin n) -> LTE (S (finToNat k)) n
+finToNatLTBound Z x impossible
+finToNatLTBound (S m) FZ = LTESucc LTEZero
+finToNatLTBound (S m) (FS k) = LTESucc (finToNatLTBound m k)
+
+natToFin : (l, b : Nat) -> {auto ok : IsSucc b} -> Fin b
+natToFin l Z {ok = ItIsSucc} impossible
+natToFin Z (S k) {ok = p} = FZ
+natToFin (S l) (S Z) = FZ
+natToFin (S l) (S (S b)) {ok = p} = FS (natToFin l (S b) {ok = ItIsSucc})
+
+isSuccToIsFSucc : (n : Nat) -> (IsSucc n) -> IsFSucc (natToFin n (S n) {ok = ItIsSucc {n = n}})
+isSuccToIsFSucc Z ItIsSucc impossible
+isSuccToIsFSucc (S m) ItIsSucc = ItIsFSucc {k = natToFin m (S m) {ok = ItIsSucc {n = m}}}
+
+finToNatToFin2 : (n : Nat) -> n = finToNat (natToFin n (S n) {ok = ItIsSucc {n = n}})
+finToNatToFin2 Z = Refl
+finToNatToFin2 (S k) = eqSucc k (finToNat (natToFin k (S k) {ok = ItIsSucc {n = k}})) (finToNatToFin2 k)
+
+vectInj : p = q -> Vect p t -> Vect q t
+vectInj Refl xs = xs
 
 mappedListsHaveSameLength : (f : t1 -> t2) -> (xs : List t1) -> (ys : List t2) -> map f xs = ys -> length xs = length ys
 mappedListsHaveSameLength f xs ys pf = rewrite sym pf in rewrite mapPreservesLength f xs in Refl

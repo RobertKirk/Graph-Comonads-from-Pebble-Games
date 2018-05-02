@@ -11,9 +11,6 @@ import src.Graphs
 %access public export
 %default total
 
-data IsFSucc : Fin k -> Type where
-    ItIsFSucc : IsFSucc (FS k)
-
 data EFplaysType : (n: Nat) -> (t : Type) -> Type where
     MkPlays : (k : Fin (S n)) -> {auto ok : IsFSucc k} -> Vect (finToNat k) t -> EFplaysType n t
 
@@ -60,7 +57,7 @@ efRelPrefix {j = n} {k = m} xs ys with (isLTE n m)
 efRel : Eq t => Rel t -> Rel (EFplaysType bound t)
 efRel r ((MkPlays FZ {ok = ItIsFSucc {k = FZ}} xs), (MkPlays FZ {ok = ItIsFSucc} ys)) impossible
 efRel r (p1, (MkPlays FZ {ok = ItIsFSucc} ys)) impossible
-efRel r ((MkPlays (FS j) {ok = pj} xs), (MkPlays (FS k) {ok = pk} ys)) = r ((Vect.last xs), (Vect.last ys)) && efRelPrefix xs ys
+efRel r ((MkPlays (FS j) {ok = pj} xs), (MkPlays (FS k) {ok = pk} ys)) = r ((vlast xs), (vlast ys)) && efRelPrefix xs ys
 
 efInterp : Eq t => (bound : Nat) -> (int : Interpretation sig t) -> Interpretation sig (EFplaysType bound t)
 efInterp bound int rel = efRel (int rel)
@@ -87,7 +84,7 @@ EFFunctor (S k) {ok = p} = RFunctorInfo (EFComonadObj (S k)) (EFComonadMorph (S 
 
 counitFunc : EFplaysType (S k) t -> t
 counitFunc (MkPlays FZ {ok = ItIsFSucc} xs) impossible
-counitFunc (MkPlays (FS j) {ok = p} xs) = last xs
+counitFunc (MkPlays (FS j) {ok = p} xs) = vlast xs
 
 counitEF : {sigma : Signature} -> {s : Structure sigma} -> (bound : Nat) -> {auto ok : IsSucc bound} -> StructMorph (EFComonadObj bound s) s
 counitEF {sigma = sig} Z {ok = ItIsSuc} impossible
@@ -100,21 +97,29 @@ counitEF {sigma = (S sig)} {s = (t ** vs ** interp ** eqt)} (S k) {ok = p} = Smo
             prf : (rel : Fin (S sig)) -> IsGraphMorph EFComonad.counitFunc (efInterp (S k) interp rel) (interp rel)
             prf rel = IsGraphMorphByElem intprf
 
-playInits : (m, n : Nat) -> {auto ok1 : IsSucc m} -> {auto ok2 : IsSucc n} -> Vect n t -> Vect n (EFplaysType m t)
+playInits : (k : Nat) -> (n : Nat) -> {auto ok1 : IsSucc k} -> {auto ok2 : IsSucc n} -> {auto lt : LTE n k} -> Vect n t -> Vect n (EFplaysType k t)
 playInits Z n {ok1 = ItIsSucc} xs impossible
 playInits (S j) Z {ok1 = p} {ok2 = ItIsSucc} xs impossible
 playInits (S j) (S Z) {ok1 = p} {ok2 = q} [x] = [MkPlays (FS FZ) [x]]
-playInits (S Z) (S (S k)) {ok1 = p} {ok2 = q} (x ::xs) = (MkPlays (FS FZ) [x]) :: (playInits (S Z) (S k) xs)
-playInits (S (S j)) (S (S k)) {ok1 = p} {ok2 = q} (x::xs) = 
-    (MkPlays (FS FZ) [x]) :: (map (\(MkPlays l ys) => MkPlays (FS l) (x::ys)) (playInits (S j) (S k) xs))
+playInits (S Z) (S (S k)) {ok1 = p} {ok2 = q} {lt = LTESucc r} (x ::xs) = absurd r
+playInits (S (S j)) (S (S k)) {ok1 = p} {ok2 = q} {lt = LTESucc r} (x::xs) = 
+    (MkPlays (FS FZ) [x]) :: (map (\(MkPlays l ys) => MkPlays (FS l) (x::ys)) (playInits (S j) (S k) {lt = r} xs))
+
+lastOfPlaysInitsIsList : (m : Nat) -> (n : Nat) -> {auto ok1 : IsSucc m} -> {auto ok2 : IsSucc n} -> {auto lt : LTE n m} -> (xs : Vect n t) -> 
+    vlast {n = n} {ok = ok2} (playInits m n xs) = MkPlays (natToFin n (S n)) {ok = isSuccToIsFSucc n ok2} (vectInj (finToNatToFin2 n) xs)
+lastOfPlaysInitsIsList Z n {ok1 = ItIsSucc} xs impossible
+lastOfPlaysInitsIsList (S n) Z {ok2 = ItIsSucc} xs impossible
+lastOfPlaysInitsIsList (S j) (S Z) {lt = LTESucc p} [x] = Refl
+lastOfPlaysInitsIsList (S Z) (S (S k)) {lt = LTESucc p} (x::xs) = absurd p
+lastOfPlaysInitsIsList (S (S j)) (S (S k)) {lt = LTESucc p} (x::xs) = ?lprf 
 
 morphExtend : ((EFplaysType (S j) t1) -> t2) -> EFplaysType (S j) t1 -> EFplaysType (S j) t2
 morphExtend {j = bnd} morph (MkPlays FZ {ok = ItIsFSucc} xs) impossible
-morphExtend {j = bnd} morph (MkPlays (FS k) {ok = p}     xs) = MkPlays (FS k) {ok = p} (map morph (playInits (S bnd) (S (finToNat k)) xs))
+morphExtend {j = bnd} morph (MkPlays (FS k) {ok = p}     xs) = MkPlays (FS k) {ok = p} (map morph (playInits (S bnd) (S (finToNat k)) {lt = finToNatLTBound (S bnd) k} xs))
 
-coextPrf : Eq t1 => Eq t2 => (rel1 : Rel t1) -> (rel2 : Rel t2) -> (f : EFplaysType (S j) t1 -> t2) -> 
+coextPrf : Eq t1 => Eq t2 => (rel1 : Rel t1) -> (rel2 : Rel t2) -> (morph : EFplaysType (S j) t1 -> t2) -> 
     IsGraphMorph morph (efRel rel1) rel2 -> (a : EFplaysType (S j) t1) -> (b : EFplaysType (S j) t1) -> 
-    True = efRel rel1 (a, b) -> True = efRel rel2 (morphExtend f a, morphExtend f b)
+    True = efRel rel1 (a, b) -> True = efRel rel2 (morphExtend morph a, morphExtend morph b)
 coextPrf rel1 rel2 morph gmorphPrf (MkPlays FZ {ok = ItIsFSucc {k = FZ}} xs) pys relPrf impossible
 coextPrf rel1 rel2 morph gmorphPrf xys (MkPlays FZ {ok = ItIsFSucc} ys) relPrf impossible
 coextPrf rel1 rel2 morph (IsGraphMorphByElem gmorphPrf) (MkPlays (FS l1) xs) (MkPlays (FS l2) ys) relPrf = ?hole

@@ -76,7 +76,7 @@ efMap (S k) {ok = p}    morph (MkPlays l xs) = MkPlays l (map morph xs)
 
 EFComonadMorph : (bound : Nat) -> {auto ok : IsSucc bound} -> StructMorph s1 s2 -> StructMorph (EFComonadObj bound s1) (EFComonadObj bound s2)
 EFComonadMorph Z {ok = ItIsSucc} smorph impossible
-EFComonadMorph (S k) {ok = p} (Smor f prf) = Smor (efMap (S k) {ok = p} f) ?prf
+EFComonadMorph (S k) {ok = p} (Smor f prf) = Smor (efMap (S k) {ok = p} f) ?efMorphProof
 
 EFFunctor : (bound : Nat) -> {auto ok : IsSucc bound} -> RFunctor (Structure sigma) (StructCat sigma)
 EFFunctor Z {ok = ItIsSucc} impossible
@@ -109,9 +109,9 @@ lastOfPlaysInitsIsList : (m : Nat) -> (n : Nat) -> {auto ok1 : IsSucc m} -> {aut
     vlast {n = n} {ok = ok2} (playInits m n xs) = MkPlays (natToFin n (S n)) {ok = isSuccToIsFSucc n ok2} (vectInj (finToNatToFin2 n) xs)
 lastOfPlaysInitsIsList Z n {ok1 = ItIsSucc} xs impossible
 lastOfPlaysInitsIsList (S n) Z {ok2 = ItIsSucc} xs impossible
-lastOfPlaysInitsIsList (S j) (S Z) {lt = LTESucc p} [x] = Refl
+lastOfPlaysInitsIsList (S j) (S Z) {ok1 = ItIsSucc} {ok2 = ItIsSucc} {lt = LTESucc p} [y] = ?lastPlaysProofCase1 --Refl {x = MkPlays (FS (FZ)) {ok = ItIsFSucc {k = FZ}} [y]}
 lastOfPlaysInitsIsList (S Z) (S (S k)) {lt = LTESucc p} (x::xs) = absurd p
-lastOfPlaysInitsIsList (S (S j)) (S (S k)) {lt = LTESucc p} (x::xs) = ?lprf 
+lastOfPlaysInitsIsList (S (S j)) (S (S k)) {lt = LTESucc p} (x::xs) = ?lastPlaysProofCase2 
 
 morphExtend : ((EFplaysType (S j) t1) -> t2) -> EFplaysType (S j) t1 -> EFplaysType (S j) t2
 morphExtend {j = bnd} morph (MkPlays FZ {ok = ItIsFSucc} xs) impossible
@@ -122,7 +122,9 @@ coextPrf : Eq t1 => Eq t2 => (rel1 : Rel t1) -> (rel2 : Rel t2) -> (morph : EFpl
     True = efRel rel1 (a, b) -> True = efRel rel2 (morphExtend morph a, morphExtend morph b)
 coextPrf rel1 rel2 morph gmorphPrf (MkPlays FZ {ok = ItIsFSucc {k = FZ}} xs) pys relPrf impossible
 coextPrf rel1 rel2 morph gmorphPrf xys (MkPlays FZ {ok = ItIsFSucc} ys) relPrf impossible
-coextPrf rel1 rel2 morph (IsGraphMorphByElem gmorphPrf) (MkPlays (FS l1) xs) (MkPlays (FS l2) ys) relPrf = ?hole
+coextPrf rel1 rel2 morph (IsGraphMorphByElem gmorphPrf) (MkPlays (FS l1) xs) (MkPlays (FS l2) ys) relPrf with (isLTE (finToNat l1) (finToNat l2)) proof ltprf
+        | Yes yesprf = ?coextLeftProof
+        | No contra = ?coextRightProof
 
 coextensionEF : {sigma : Signature} -> {s1, s2 : Structure sigma} -> (bound : Nat) -> {auto ok : IsSucc bound} -> 
     StructMorph (EFComonadObj bound s1) s2 -> StructMorph (EFComonadObj bound s1) (EFComonadObj bound s2)

@@ -91,15 +91,16 @@ PebComonadMorphGTProof : Eq t1 => Eq t2 => (pebs : Nat) -> {auto ok : IsSucc peb
 PebComonadMorphGTProof Z {ok = ItIsSucc} xs ys vmap ltproof prf1 impossible
 PebComonadMorphGTProof (S k)    {ok = p} xs ys vmap ltproof prf1 = ?gtproofhole
 
-eqProofInt : Eq t1 => (pebs : Nat) -> {auto ok : IsSucc pebs} -> (xs, ys : pebPlaysType pebs t1) -> True = pebblesRelSuffix xs ys -> 
-    EQ = compare (length xs) (length ys) -> True = xs == ys
-eqProofInt Z {ok = ItIsSucc} xs ys p1 p2 impossible
-eqProofInt (S k) {ok =p} xs ys suffixPrf eqPrf = ?hole45 --rewrite sym eqPrf in suffixPrf
+-- eqProofInt : Eq t1 => (pebs : Nat) -> {auto ok : IsSucc pebs} -> (xs, ys : pebPlaysType pebs t1) -> True = pebblesRelSuffix xs ys -> 
+--     EQ = compare (length xs) (length ys) -> True = xs == ys
+-- eqProofInt Z {ok = ItIsSucc} xs ys p1 p2 impossible
+-- eqProofInt (S k) {ok =p} xs ys suffixPrf eqPrf = ?hole4
 
 PebComonadMorphEQProof : Eq t1 => Eq t2 => (pebs : Nat) -> {auto ok : IsSucc pebs} ->  (xs, ys : pebPlaysType pebs t1) -> (vmap : t1 -> t2) ->
     EQ = compare (length ys) (length xs) -> True = pebblesRelSuffix xs ys -> True = pebblesRelSuffix (pebmap vmap xs) (pebmap vmap ys)
 PebComonadMorphEQProof Z {ok = ItIsSucc} xs ys vmap ltproof prf1 impossible
-PebComonadMorphEQProof (S k)    {ok = p} xs ys vmap ltproof prf1 = ?holeymoley
+PebComonadMorphEQProof (S k) {ok = p} xs ys vmap eqPrf prf1 = ?hole --with (head ((length xs):<:(Singl (length ys))))
+    -- | x = ?eqeqhol
     -- rewrite pebmapPreservesLength vmap xs in 
     -- rewrite pebmapPreservesLength vmap ys in 
     -- rewrite sym (eqReflexiveCompare (length ys) (length xs) ltproof) in prf1                    
@@ -131,8 +132,7 @@ PebComonadMorph {g1 = (t1 ** v1 ** e1 ** eq1)} {g2 = (t2 ** v2 ** e2 ** eq2)} pe
     Gmor (pebmap vmap) (IsGraphMorphByElem prf)
         where   prf : (a : pebPlaysType pebs t1) -> (b : pebPlaysType pebs t1) -> True = (pebblesRel e1) (a, b) -> 
                     True = (pebblesRel e2) (pebmap vmap a, pebmap vmap b)
-                prf xs ys prfae1b = 
-                    (PebComonadMorphProof pebs {ok = p} e1 e2 vmap (IsGraphMorphByElem vmapIsGraphMorph) xs ys prfae1b)
+                prf = PebComonadMorphProof pebs {ok = p} e1 e2 vmap (IsGraphMorphByElem vmapIsGraphMorph)
   
 pebbleFunctor : (pebs:Nat) -> {auto ok : IsSucc pebs} -> RFunctor Graph GraphCat
 pebbleFunctor Z {ok = ItIsSucc} impossible
@@ -147,15 +147,19 @@ counitPeb {g = (t ** vs ** es ** eq)} {n = (S k)} {ok = p} = Gmor counitFunc (Is
                 True = es (counitFunc a, counitFunc b)
             prf xs ys prfaesb = conjunctsTrueR prfaesb
 
--- comultPebProof : (a : pebPlaysType (S k) t) -> (b : pebPlaysType (S k) t) -> True = (pebblesRel {pebs = (S k)} es) (a,b) -> 
---     True = (pebblesRel {pebs = (S k)} (pebblesRel {pebs = (S k)} es)) (comultFunc a, comultFunc b)
+comultFunc : (pebPlaysType m t) -> (pebPlaysType m (pebPlaysType m t))
+comultFunc plays = zip (map fst plays) (inits plays)    
+            
+-- comultPebProof : Eq t => (k : Nat) -> (es : Rel t) -> (a : pebPlaysType (S k) t) -> (b : pebPlaysType (S k) t) -> 
+--     True = (pebblesRel @{pebPlaysTypeEq} es) (a,b) -> 
+--     True = (pebblesRel {t = pebPlaysType (S k) t} (pebblesRel {t = t} @{pebPlaysTypeEq} es)) 
+--         (comultFunc a, comultFunc b)
+-- comultPebProof = ?holecomilt
 
 comultPeb : {g : Graph} -> (n: Nat) -> {auto ok : IsSucc n} -> Gmorph (PebComonadObj n g) (PebComonadObj n (PebComonadObj n g))
 comultPeb {n = Z} {ok = ItIsSucc} impossible
 comultPeb {g = (t ** vs ** es ** eq)} {n = (S k)} {ok = p} = Gmor comultFunc (IsGraphMorphByElem prf)
-    where   comultFunc : (pebPlaysType m t) -> (pebPlaysType m (pebPlaysType m t))
-            comultFunc plays = zip (map fst plays) (inits plays)
-            prf = ?holecomult
+    where   prf = ?comultMorphProof
             -- prf : (a : pebPlaysType (S k) t) -> (b : pebPlaysType (S k) t) -> True = (pebblesRel {pebs = (S k)} es) (a,b) -> 
             --     True = (pebblesRel {pebs = (S k)} (pebblesRel {pebs = (S k)} es)) (comultFunc a, comultFunc b)
             -- prf xs ys prfaesb = ?hole2

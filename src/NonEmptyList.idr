@@ -20,11 +20,11 @@ data NEList : (t : Type) -> Type where
     Singl : (x : t) -> NEList t
     (:<:) : (x : t) -> (xs : NEList t) -> NEList t
 
-Eq t => Eq (NEList t) where
-    (==) (Singl x) (Singl y) = x == y
-    (==) (x:<:xs) (y:<:ys) =
-        if x==y then xs==ys else False
-    (==) _ _ = False
+-- Eq t => Eq (NEList t) where
+--     (==) (Singl x) (Singl y) = x == y
+--     (==) (x:<:xs) (y:<:ys) =
+--         if x==y then xs==ys else False
+--     (==) _ _ = False
 
 head : NEList t -> t
 head (Singl x) = x
@@ -78,9 +78,9 @@ toList (Singl x) = [x]
 toList (x:<:xs) = x :: (toList xs)
 
 isPrefixOfBy : (eq : a -> a -> Bool) -> (left, right : NEList a) -> Bool
-isPrefixOfBy p (Singl x) ys         = p x (head ys)
-isPrefixOfBy p (x:<:xs) (Singl y)   = False
-isPrefixOfBy p (x:<:xs) (y:<:ys)    = if (p x (head ys)) then isPrefixOfBy p xs ys else False
+isPrefixOfBy p (Singl x) ys       = p x (head ys)
+isPrefixOfBy p (x:<:xs) (Singl y) = False
+isPrefixOfBy p (x:<:xs) (y:<:ys)  = if (p x (head ys)) then isPrefixOfBy p xs ys else False
 
 isPrefixOf : Eq a => NEList a -> NEList a -> Bool
 isPrefixOf = isPrefixOfBy (==)

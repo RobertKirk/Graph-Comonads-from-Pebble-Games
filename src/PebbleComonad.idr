@@ -38,16 +38,11 @@ pebPlays (S pebs) xs = concatNESofNES (iterate (uplength xs pebs) (initial pebs 
                         map (\p => (Singl (restrict pebs (toIntegerNat p), y))) [0..pebs]) ys)
 
 pebblesRelSuffix : Eq t => (as : pebPlaysType pebs t) -> (bs : pebPlaysType pebs t) -> Bool
-pebblesRelSuffix xs ys with (compare (length xs) (length ys)) proof compprf
-    | LT = (isPrefixOf xs ys) && (isNothing (NonEmptyList.find ((==) (Basics.fst (last xs))) 
-        (map fst (drop ((-) 
-        {smaller = ltImpliesLTE (length xs) (length ys) (compareToLT (length xs) (length ys) compprf)} 
-        (length ys) (length xs)) ys))))
-    | GT = (isPrefixOf ys xs) && (isNothing (NonEmptyList.find ((==) (Basics.fst (last ys))) 
-        (map fst (drop ((-) 
-        {smaller = ltImpliesLTE (length ys) (length xs) (compareToLT (length ys) (length xs) (compareSwap (length xs) (length ys) compprf))} 
-        (length xs) (length ys)) xs))))
-    | EQ = xs == ys
+pebblesRelSuffix xs ys with (isLTE (length xs) (length ys))
+    | Yes prf = (NonEmptyList.isPrefixOf @{pebPlaysTypeEq} xs ys) && (isNothing (NonEmptyList.find ((==) (Basics.fst (last xs))) 
+        (map fst (drop ((-) (length ys) (length xs)) ys))))
+    | No contra = (isPrefixOf @{pebPlaysTypeEq} ys xs) && (isNothing (NonEmptyList.find ((==) (Basics.fst (last ys))) 
+        (map fst (drop ((-) {smaller = notLTEImpliesLT _ _ contra} (length xs) (length ys)) xs))))
 
 pebblesRel : Eq t => Rel t -> Rel (pebPlaysType pebs t)
 pebblesRel r (xs, ys) = (pebblesRelSuffix xs ys) && (r (snd (last xs), snd (last ys)))
@@ -60,7 +55,7 @@ PebComonadObj pebs (t ** vs ** e ** eqt) {ok = p} =
     (pebblesRel e) **
     pebPlaysTypeEq)
 
-pairMapRight : (t2 -> t3) -> (t1,t2) -> (t1,t3)
+pairMapRight : (t2 -> t3) -> (t1, t2) -> (t1, t3)
 pairMapRight f (a, b) = (a, f b)
 
 pebmap : (t1 -> t2) -> (pebPlaysType n t1) -> (pebPlaysType n t2)
@@ -81,49 +76,40 @@ PebComonadMorphSndProof e1 e2 xs ys vmap (IsGraphMorphByElem vmapIsGraphMorph) e
     rewrite sym (pebMapLastandVmapCommute xs vmap) in 
     vmapIsGraphMorph (snd (last xs)) (snd (last ys)) e1relprf
 
-PebComonadMorphLTProof : Eq t1 => Eq t2 => (pebs : Nat) -> {auto ok : IsSucc pebs} ->  (xs, ys : pebPlaysType pebs t1) -> (vmap : t1 -> t2) ->
-    LT = compare (length ys) (length xs) -> True = pebblesRelSuffix xs ys -> True = pebblesRelSuffix (pebmap vmap xs) (pebmap vmap ys)
-PebComonadMorphLTProof Z {ok = ItIsSucc} xs ys vmap ltproof prf1 impossible
-PebComonadMorphLTProof (S k)    {ok = p} xs ys vmap ltproof prf1 = ?ltproofhole
+PebComonadMorphLTEProof : Eq t1 => Eq t2 => (pebs : Nat) -> {auto ok : IsSucc pebs} ->  (xs : pebPlaysType pebs t1) -> (ys : pebPlaysType pebs t1) -> 
+    (vmap : t1 -> t2) -> LTE (length xs) (length ys) -> 
+    True = (isPrefixOf @{pebPlaysTypeEq} xs ys) && (isNothing (NonEmptyList.find ((==) (Basics.fst (last xs))) 
+    (map Basics.fst (drop ((-) (length ys) (length xs)) ys)))) -> 
+    True = pebblesRelSuffix (pebmap vmap xs) (pebmap vmap ys)
+PebComonadMorphLTEProof Z {ok = ItIsSucc} xs ys vmap ltproof prf1 impossible
+PebComonadMorphLTEProof (S j) xs ys vmap ltproof prf1 with (isLTE (length (pebmap vmap xs)) (length (pebmap vmap ys)))
+    | Yes yproof = ?yhole
+    | No cadgadgontra = ?ltnadgadghole
 
 PebComonadMorphGTProof : Eq t1 => Eq t2 => (pebs : Nat) -> {auto ok : IsSucc pebs} ->  (xs, ys : pebPlaysType pebs t1) -> (vmap : t1 -> t2) ->
-    GT = compare (length ys) (length xs) -> True = pebblesRelSuffix xs ys -> True = pebblesRelSuffix (pebmap vmap xs) (pebmap vmap ys)
+    LTE (length ys) (length xs) -> 
+    (True = (NonEmptyList.isPrefixOf @{pebPlaysTypeEq} ys xs) && (isNothing (NonEmptyList.find ((==) (Basics.fst (last ys))) 
+    (map Basics.fst (drop ((-) (NonEmptyList.length xs) (NonEmptyList.length ys)) xs))))) -> 
+    True = pebblesRelSuffix (pebmap vmap xs) (pebmap vmap ys)
 PebComonadMorphGTProof Z {ok = ItIsSucc} xs ys vmap ltproof prf1 impossible
-PebComonadMorphGTProof (S k)    {ok = p} xs ys vmap ltproof prf1 = ?gtproofhole
-
--- eqProofInt : Eq t1 => (pebs : Nat) -> {auto ok : IsSucc pebs} -> (xs, ys : pebPlaysType pebs t1) -> True = pebblesRelSuffix xs ys -> 
---     EQ = compare (length xs) (length ys) -> True = xs == ys
--- eqProofInt Z {ok = ItIsSucc} xs ys p1 p2 impossible
--- eqProofInt (S k) {ok =p} xs ys suffixPrf eqPrf = ?hole4
-
-PebComonadMorphEQProof : Eq t1 => Eq t2 => (pebs : Nat) -> {auto ok : IsSucc pebs} ->  (xs, ys : pebPlaysType pebs t1) -> (vmap : t1 -> t2) ->
-    EQ = compare (length ys) (length xs) -> True = pebblesRelSuffix xs ys -> True = pebblesRelSuffix (pebmap vmap xs) (pebmap vmap ys)
-PebComonadMorphEQProof Z {ok = ItIsSucc} xs ys vmap ltproof prf1 impossible
-PebComonadMorphEQProof (S k) {ok = p} xs ys vmap eqPrf prf1 = ?hole --with (head ((length xs):<:(Singl (length ys))))
-    -- | x = ?eqeqhol
-    -- rewrite pebmapPreservesLength vmap xs in 
-    -- rewrite pebmapPreservesLength vmap ys in 
-    -- rewrite sym (eqReflexiveCompare (length ys) (length xs) ltproof) in prf1                    
+PebComonadMorphGTProof (S k) {ok = p} xs ys vmap ltproof prf1 = ?gtproofhole -- with (isLTE (NonEmptyList.length (pebmap vmap ys)) (NonEmptyList.length (pebmap vmap xs)))
+    -- | Yes yproof = ?yhole
+    -- | No cadgadgontra = ?ltnadgadghole
 
 PebComonadMorphProof : Eq t1 => Eq t2 => (pebs : Nat) -> {auto ok : IsSucc pebs} -> (e1 : Rel t1) -> (e2 : Rel t2) -> 
     (vmap : t1 -> t2) -> (IsGraphMorph vmap e1 e2) -> (a : pebPlaysType pebs t1) -> (b : pebPlaysType pebs t1) -> 
     True = (pebblesRel {pebs = pebs} e1) (a, b) -> True = (pebblesRel {pebs = pebs} e2) (pebmap vmap a, pebmap vmap b)
 PebComonadMorphProof Z {ok = ItIsSuc} e1 e2 vmap prf a b prf2 impossible
-PebComonadMorphProof (S k) {ok = p} e1 e2 vmap (IsGraphMorphByElem vmapIsGraphMorph) xs ys e1relprf with (compare (length ys) (length xs)) proof compPrf
-        | LT = 
+PebComonadMorphProof (S k) {ok = p} e1 e2 vmap (IsGraphMorphByElem vmapIsGraphMorph) xs ys e1relprf with (isLTE (length xs) (length ys))
+        | Yes yprf =
             andCombines (pebblesRelSuffix (pebmap vmap xs) (pebmap vmap ys))
                         (e2 (snd (last (pebmap vmap xs)), snd (last (pebmap vmap ys))))
-                        (PebComonadMorphLTProof (S k) {ok = p} xs ys vmap compPrf (conjunctsTrueL e1relprf))
+                        (PebComonadMorphLTEProof (S k) xs ys vmap yprf (conjunctsTrueL e1relprf))
                         (PebComonadMorphSndProof e1 e2 xs ys vmap (IsGraphMorphByElem vmapIsGraphMorph) (conjunctsTrueR e1relprf))
-        | GT = 
+        | No contra =
             andCombines (pebblesRelSuffix (pebmap vmap xs) (pebmap vmap ys))
                         (e2 (snd (last (pebmap vmap xs)), snd (last (pebmap vmap ys))))
-                        (PebComonadMorphGTProof (S k) {ok = p} xs ys vmap compPrf (conjunctsTrueL e1relprf))
-                        (PebComonadMorphSndProof e1 e2 xs ys vmap (IsGraphMorphByElem vmapIsGraphMorph) (conjunctsTrueR e1relprf))
-        | EQ = 
-            andCombines (pebblesRelSuffix (pebmap vmap xs) (pebmap vmap ys))
-                        (e2 (snd (last (pebmap vmap xs)), snd (last (pebmap vmap ys))))
-                        (PebComonadMorphEQProof (S k) {ok = p} xs ys vmap compPrf (conjunctsTrueL e1relprf))
+                        (PebComonadMorphGTProof (S k) xs ys vmap (notLTEImpliesLT _ _ contra) (conjunctsTrueL e1relprf))
                         (PebComonadMorphSndProof e1 e2 xs ys vmap (IsGraphMorphByElem vmapIsGraphMorph) (conjunctsTrueR e1relprf))
 
 PebComonadMorph : {g1, g2 : Graph} -> (pebs : Nat) -> {auto ok : IsSucc pebs} -> Gmorph g1 g2 -> Gmorph (PebComonadObj pebs g1) (PebComonadObj pebs g2)
@@ -176,7 +162,7 @@ coextensionPeb : {g1, g2 : Graph} -> (n : Nat) -> {auto ok : IsSucc n} -> Gmorph
 coextensionPeb Z {ok = ItIsSucc} morph impossible
 coextensionPeb {g1 = (t1 ** v1 ** e1 ** eq1)} {g2 = (t2 ** v2 ** e2 ** eq2)} (S k) {ok = p} (Gmor morph prf) = 
     Gmor (pebmorphExtend (S k) {ok = p} morph) prof 
-        where prof = ?hole
+        where prof = ?coextPrf
 
 pebbleIndexedComonadKleisli : RIxCondComonadKleisli Graph GraphCat Nat IsSucc
 pebbleIndexedComonadKleisli = RIxCondComonadKleisliInfo PebComonadObj counitPeb coextensionPeb

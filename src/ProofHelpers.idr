@@ -101,6 +101,12 @@ compareToLT (S k) Z     Refl impossible
 compareToLT Z     (S k) prf = LTESucc LTEZero
 compareToLT (S k) (S j) prf = LTESucc (compareToLT k j prf)
 
+notLTEImpliesLT : (a, b: Nat) -> Not (LTE a b) -> LTE b a
+notLTEImpliesLT Z Z contra = LTEZero
+notLTEImpliesLT Z (S k) contra = absurd (contra LTEZero)
+notLTEImpliesLT (S k) Z contra = LTEZero
+notLTEImpliesLT (S k) (S j) contra = LTESucc (notLTEImpliesLT k j (\p => contra (LTESucc p)))
+
 compareSwap : (n, m : Nat) ->  GT = compare n m -> LT = compare m n
 compareSwap Z     Z     Refl impossible
 compareSwap Z     (S k) Refl impossible

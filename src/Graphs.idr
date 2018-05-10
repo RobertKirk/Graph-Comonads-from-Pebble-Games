@@ -88,7 +88,7 @@ infixr 9 ./.
 (./.) {sign = (S k)} (Smor f (EmptySigStructMorph Refl)) sm2                                 impossible
 (./.) {sign = (S k)} (Smor f2 (ItIsStructMorph f2Prf))   (Smor f (EmptySigStructMorph Refl)) impossible
 (./.) {sign = (S k)} {a = (ta ** vas ** arels ** eqa)} {b = (tb ** vbs ** brels ** eqb)} {c = (tc **   vcs ** crels ** eqc)}
-    (Smor f2 (ItIsStructMorph f2Prf)) (Smor f1 (ItIsStructMorph f1Prf)) = Smor (f2 . f1) (ItIsStructMorph prf)
+    (Smor f2 (ItIsStructMorph f2Prf)) (Smor f1 (ItIsStructMorph f1Prf))                     = Smor (f2 . f1) (ItIsStructMorph prf)
         where prf : (n : Fin (S k)) -> IsGraphMorph (f2 . f1) (arels n) (crels n)
               prf n = IsGraphMorphByElem (compProof f1 f2 (arels n) (brels n) (crels n) (f1Prf n) (f2Prf n))
 

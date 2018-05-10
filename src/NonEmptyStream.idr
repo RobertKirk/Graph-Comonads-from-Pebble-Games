@@ -48,6 +48,7 @@ listToNEStream [x] {ok=p} = Sing x
 listToNEStream (x::y::ys) {ok=p} = x:>:(listToNEStream {ok = IsNonEmpty} (y::ys))
 
 -- we may have a Non-empty stream of lists, all of which are empty, so we need a unit
+-- We assert totality here as Idris can't figure out that the argument to concatNESofList is structurally smaller in the recursive call
 concatNESofList : (unit:t) -> NEStream (List t) -> NEStream t
 concatNESofList unit (Sing []) = Sing unit
 concatNESofList unit (Sing [x]) = Sing x
@@ -70,6 +71,7 @@ concatNESofNES (x:>:xs) = case x of
 concatNESofNEL : NEStream (NEList t) -> NEStream t
 concatNESofNEL xs = concatNESofNES (map NELtoNES xs)
 
+-- We assert totality here as Idris can't figure out that the argument to NESToList is structurally smaller in the recursive call
 NESToList : NEStream t -> List t 
 NESToList (Sing x) = [x]
 NESToList (x:>:xs) = x :: (assert_total (NESToList xs))

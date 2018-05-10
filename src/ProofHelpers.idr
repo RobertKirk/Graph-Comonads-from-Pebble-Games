@@ -39,17 +39,6 @@ finToNatToFin2 (S k) = eqSucc k (finToNat (natToFin k (S k) {ok = ItIsSucc {n = 
 vectInj : p = q -> Vect p t -> Vect q t
 vectInj Refl xs = xs
 
-mappedListsHaveSameLength : (f : t1 -> t2) -> (xs : List t1) -> (ys : List t2) -> map f xs = ys -> length xs = length ys
-mappedListsHaveSameLength f xs ys pf = rewrite sym pf in rewrite mapPreservesLength f xs in Refl
-
-intermediateMapsCompose : (f : t1 -> t2) -> (g: t2 -> t3) -> (xs : List t1) -> 
-    (ys : List t2) -> (zs : List t3) -> map f xs = ys -> map g ys = zs -> map (g . f) xs = zs
-intermediateMapsCompose f g xs ys zs pf1 pf2 = rewrite sym (mapFusion g f xs) in rewrite pf1 in rewrite pf2 in Refl
-
-mapPreservesNonEmpty : (f : a -> b) -> (xs : List a) -> NonEmpty xs -> NonEmpty (map f xs)
-mapPreservesNonEmpty f [] IsNonEmpty impossible
-mapPreservesNonEmpty f (y::ys) pf = IsNonEmpty
-
 conjunctsTrueL : {a : Bool} -> True = a && b -> True = a
 conjunctsTrueL {a = True}  prf = Refl
 conjunctsTrueL {a = False} Refl impossible
@@ -95,33 +84,15 @@ ltImpliesLTE Z (S k) prf = LTEZero
 ltImpliesLTE (S k) Z prf impossible
 ltImpliesLTE (S k) (S j) prf = lteSuccLeft prf
 
-compareToLT : (n, m : Nat) ->  LT = compare n m -> LT n m
-compareToLT Z     Z     Refl impossible
-compareToLT (S k) Z     Refl impossible
-compareToLT Z     (S k) prf = LTESucc LTEZero
-compareToLT (S k) (S j) prf = LTESucc (compareToLT k j prf)
-
 notLTEImpliesLT : (a, b: Nat) -> Not (LTE a b) -> LTE b a
 notLTEImpliesLT Z Z contra = LTEZero
 notLTEImpliesLT Z (S k) contra = absurd (contra LTEZero)
 notLTEImpliesLT (S k) Z contra = LTEZero
 notLTEImpliesLT (S k) (S j) contra = LTESucc (notLTEImpliesLT k j (\p => contra (LTESucc p)))
 
-compareSwap : (n, m : Nat) ->  GT = compare n m -> LT = compare m n
-compareSwap Z     Z     Refl impossible
-compareSwap Z     (S k) Refl impossible
-compareSwap (S k) Z     prf = Refl
-compareSwap (S k) (S j) prf = compareSwap k j prf
-
 mapPreservesLengthNel : (f : a -> b) -> (l : NEList a) -> length (map f l) = length l
 mapPreservesLengthNel f (Singl x) = Refl
 mapPreservesLengthNel f (x:<:xs)  = let inductiveHypothesis = mapPreservesLengthNel f xs in rewrite inductiveHypothesis in Refl
-
-eqReflexiveCompare : (n, m : Nat) -> EQ = compare n m -> EQ = compare m n
-eqReflexiveCompare Z Z prf = Refl
-eqReflexiveCompare (S k) Z Refl impossible
-eqReflexiveCompare Z (S k) Refl impossible
-eqReflexiveCompare (S k) (S j) prf = eqReflexiveCompare k j prf
 
 weakenPreservesToNat : (m : Fin k) -> finToNat m = finToNat (weaken m)
 weakenPreservesToNat FZ     = Refl

@@ -70,26 +70,13 @@ ltchar (n,m) = toNat n < toNat m
 [testEqString] Eq Char where
     (==) n m = (toNat n) == (toNat m)
 
-myChar : Type
-myChar = Char
+Char' : Type
+Char' = Char
 
 CharGraph : Graph
-CharGraph = (myChar ** listToNEStream ['1','2','3','4','5'] ** ltchar ** testEqString)
+CharGraph = (Char' ** listToNEStream ['1','2','3','4','5'] ** ltchar ** testEqString)
 
 testGraphMorph : Gmorph CharGraph NatGraph
 testGraphMorph = Gmor (toNat) (IsGraphMorphByElem prf)
     where prf : (a : Char) -> (b : Char) -> True = ltchar (a,b) -> True = lt (toNat a, toNat b)
           prf a b prf1 = prf1
-
---NEStream Tests
-mystream : NEStream Nat
-mystream = 1 :>: 2 :>: 3 :>: 4 :>: Sing 1
-
-ones : NEStream Nat
-ones = 1 :>: ones
-
-twos : NEStream Nat
-twos = map (\x => 2*x) ones
-
-doubles : NEStream Nat
-doubles = iterate (\x => x*2) 1

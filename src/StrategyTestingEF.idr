@@ -19,6 +19,7 @@ getType (t ** _ ** _ ** _) = t
 getList : EFplaysType n t -> List t
 getList (MkPlays len xs) = toList xs
 
+-- We assert totality so Idris know the argument in the recursive call is structurally smaller
 dimSwap : (List t1, List t2) -> List (t1, t2)
 dimSwap ([], _) = []
 dimSwap (_, []) = []

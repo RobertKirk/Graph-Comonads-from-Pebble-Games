@@ -39,9 +39,9 @@ pebPlays (S pebs) xs = concatNESofNES (iterate (uplength xs pebs) (initial pebs 
 
 pebblesRelSuffix : Eq t => (as : pebPlaysType pebs t) -> (bs : pebPlaysType pebs t) -> Bool
 pebblesRelSuffix xs ys with (isLTE (length xs) (length ys))
-    | Yes prf = (NonEmptyList.isPrefixOf @{pebPlaysTypeEq} xs ys) && (isNothing (NonEmptyList.find ((==) (Basics.fst (last xs))) 
+    | Yes prf = (NonEmptyList.isPrefixOf xs ys) && (isNothing (NonEmptyList.find ((==) (Basics.fst (last xs))) 
         (map fst (drop ((-) (length ys) (length xs)) ys))))
-    | No contra = (isPrefixOf @{pebPlaysTypeEq} ys xs) && (isNothing (NonEmptyList.find ((==) (Basics.fst (last ys))) 
+    | No contra = (isPrefixOf ys xs) && (isNothing (NonEmptyList.find ((==) (Basics.fst (last ys))) 
         (map fst (drop ((-) {smaller = notLTEImpliesLT _ _ contra} (length xs) (length ys)) xs))))
 
 pebblesRel : Eq t => Rel t -> Rel (pebPlaysType pebs t)
@@ -78,21 +78,21 @@ PebComonadMorphSndProof e1 e2 xs ys vmap (IsGraphMorphByElem vmapIsGraphMorph) e
 
 PebComonadMorphLTEProof : Eq t1 => Eq t2 => (pebs : Nat) -> {auto ok : IsSucc pebs} ->  (xs : pebPlaysType pebs t1) -> (ys : pebPlaysType pebs t1) -> 
     (vmap : t1 -> t2) -> LTE (length xs) (length ys) -> 
-    True = (isPrefixOf @{pebPlaysTypeEq} xs ys) && (isNothing (NonEmptyList.find ((==) (Basics.fst (last xs))) 
+    True = (isPrefixOf xs ys) && (isNothing (NonEmptyList.find ((==) (Basics.fst (last xs))) 
     (map Basics.fst (drop ((-) (length ys) (length xs)) ys)))) -> 
     True = pebblesRelSuffix (pebmap vmap xs) (pebmap vmap ys)
 PebComonadMorphLTEProof Z {ok = ItIsSucc} xs ys vmap ltproof prf1 impossible
-PebComonadMorphLTEProof (S j) xs ys vmap ltproof prf1 with (isLTE (length (pebmap vmap xs)) (length (pebmap vmap ys)))
-    | Yes yproof = ?yhole
-    | No cadgadgontra = ?ltnadgadghole
+PebComonadMorphLTEProof (S j) {ok = p} xs ys vmap ltproof prf1 = ?pebMorphLTEHole -- with (isLTE (length (pebmap vmap xs)) (length (pebmap vmap ys)))
+    -- | Yes yproof = ?yhole
+    -- | No cadgadgontra = ?ltnadgadghole
 
 PebComonadMorphGTProof : Eq t1 => Eq t2 => (pebs : Nat) -> {auto ok : IsSucc pebs} ->  (xs, ys : pebPlaysType pebs t1) -> (vmap : t1 -> t2) ->
     LTE (length ys) (length xs) -> 
-    (True = (NonEmptyList.isPrefixOf @{pebPlaysTypeEq} ys xs) && (isNothing (NonEmptyList.find ((==) (Basics.fst (last ys))) 
+    (True = (NonEmptyList.isPrefixOf ys xs) && (isNothing (NonEmptyList.find ((==) (Basics.fst (last ys))) 
     (map Basics.fst (drop ((-) (NonEmptyList.length xs) (NonEmptyList.length ys)) xs))))) -> 
     True = pebblesRelSuffix (pebmap vmap xs) (pebmap vmap ys)
 PebComonadMorphGTProof Z {ok = ItIsSucc} xs ys vmap ltproof prf1 impossible
-PebComonadMorphGTProof (S k) {ok = p} xs ys vmap ltproof prf1 = ?gtproofhole -- with (isLTE (NonEmptyList.length (pebmap vmap ys)) (NonEmptyList.length (pebmap vmap xs)))
+PebComonadMorphGTProof (S k) {ok = p} xs ys vmap ltproof prf1 = ?pebMorphGTHole -- with (isLTE (NonEmptyList.length (pebmap vmap ys)) (NonEmptyList.length (pebmap vmap xs)))
     -- | Yes yproof = ?yhole
     -- | No cadgadgontra = ?ltnadgadghole
 
@@ -145,7 +145,7 @@ comultFunc plays = zip (map fst plays) (inits plays)
 comultPeb : {g : Graph} -> (n: Nat) -> {auto ok : IsSucc n} -> Gmorph (PebComonadObj n g) (PebComonadObj n (PebComonadObj n g))
 comultPeb {n = Z} {ok = ItIsSucc} impossible
 comultPeb {g = (t ** vs ** es ** eq)} {n = (S k)} {ok = p} = Gmor comultFunc (IsGraphMorphByElem prf)
-    where   prf = ?comultMorphProof
+    where   prf = ?pebComultMorphProof
             -- prf : (a : pebPlaysType (S k) t) -> (b : pebPlaysType (S k) t) -> True = (pebblesRel {pebs = (S k)} es) (a,b) -> 
             --     True = (pebblesRel {pebs = (S k)} (pebblesRel {pebs = (S k)} es)) (comultFunc a, comultFunc b)
             -- prf xs ys prfaesb = ?hole2
@@ -162,7 +162,7 @@ coextensionPeb : {g1, g2 : Graph} -> (n : Nat) -> {auto ok : IsSucc n} -> Gmorph
 coextensionPeb Z {ok = ItIsSucc} morph impossible
 coextensionPeb {g1 = (t1 ** v1 ** e1 ** eq1)} {g2 = (t2 ** v2 ** e2 ** eq2)} (S k) {ok = p} (Gmor morph prf) = 
     Gmor (pebmorphExtend (S k) {ok = p} morph) prof 
-        where prof = ?coextPrf
+        where prof = ?pebCoextPrf
 
 pebbleIndexedComonadKleisli : RIxCondComonadKleisli Graph GraphCat Nat IsSucc
 pebbleIndexedComonadKleisli = RIxCondComonadKleisliInfo PebComonadObj counitPeb coextensionPeb

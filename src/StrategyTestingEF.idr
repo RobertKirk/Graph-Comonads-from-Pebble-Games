@@ -168,17 +168,17 @@ Ex1Strategy (MkPlays (FS (FS FZ)) [x, y]) with ((==) @{Ex1Equality} (Ex1Next x) 
     | (True, False)  = Two
     | (True, True)   = One
 
-intStratProof1 : Ex1Next xl = y -> y' = x -> a = (==) @{Ex1Equality} (Ex1Next xl) x -> a = (==) @{Ex1Equality} y y'
-intStratProof1 prf1 prf2 prf3 = rewrite sym prf1 in (rewrite prf2 in prf3)
+equalityCongruence1 : Ex1Next xl = y -> y' = x -> a = (==) @{Ex1Equality} (Ex1Next xl) x -> a = (==) @{Ex1Equality} y y'
+equalityCongruence1 prf1 prf2 prf3 = rewrite sym prf1 in (rewrite prf2 in prf3)
 
-intStratProof2 : (y : Ex1Universe) -> a = (==) @{Ex1Equality} y y -> a = True
-intStratProof2 One prf = prf
-intStratProof2 Two prf = prf
-intStratProof2 Three prf = prf
-intStratProof2 Four prf = prf
+equalityReflexivity1 : (y : Ex1Universe) -> a = (==) @{Ex1Equality} y y -> a = True
+equalityReflexivity1 One prf = prf
+equalityReflexivity1 Two prf = prf
+equalityReflexivity1 Three prf = prf
+equalityReflexivity1 Four prf = prf
 
-intStratProof3 : Ex1Next y = xl -> y = x -> a = (==) @{Ex1Equality} (Ex1Next x) xl' -> a = (==) @{Ex1Equality} xl xl'
-intStratProof3 prf1 prf2 prf3 = rewrite sym prf1 in rewrite prf2 in prf3
+equalityCongruence2 : Ex1Next y = xl -> y = x -> a = (==) @{Ex1Equality} (Ex1Next x) xl' -> a = (==) @{Ex1Equality} xl xl'
+equalityCongruence2 prf1 prf2 prf3 = rewrite sym prf1 in rewrite prf2 in prf3
 
 stratProof : (a : EFplaysType 2 Ex1Universe) -> (b : EFplaysType 2 Ex1Universe) -> 
     (True = efRel @{Ex1Equality} (Ex1Rel1 FZ) (a, b)) -> True = Ex1Rel2 FZ (Ex1Strategy a, Ex1Strategy b)
@@ -191,14 +191,14 @@ stratProof (MkPlays (FS (FS FZ)) (x::[xl])) (MkPlays (FS FZ) [y]) prf with ((==)
         let x1' = ex1rel1ImpliesNext xl y x1 in
         let x2 = ex1EqCorrect y x (conjunctsTrueL {a = (==) @{Ex1Equality} y x} (conjunctsTrueR {b = ((==) @{Ex1Equality} y x && True)} prf)) in
         let x3 = pairsSplitR p in
-        let test = intStratProof1 x1' x2 x3 in sym (intStratProof2 y test)
+        let test = equalityCongruence1 x1' x2 x3 in sym (equalityReflexivity1 y test)
     | (False, True)  = Refl
     | (True, False)  = 
         let x1 = conjunctsTrueL {a = Ex1Rel1 FZ (xl, y)} prf in 
         let x1' = ex1rel1ImpliesNext xl y x1 in
         let x2 = ex1EqCorrect y x (conjunctsTrueL {a = (==) @{Ex1Equality} y x} (conjunctsTrueR {b = ((==) @{Ex1Equality} y x && True)} prf)) in
         let x3 = pairsSplitR p in
-        let test = intStratProof1 x1' x2 x3 in sym (intStratProof2 y test)
+        let test = equalityCongruence1 x1' x2 x3 in sym (equalityReflexivity1 y test)
     | (True, True)   = void (ex1NoMutualNext x xl (pairsSplitL p) (pairsSplitR p))
 stratProof (MkPlays (FS FZ) [y]) (MkPlays (FS (FS FZ)) (x::[xl])) prf with ((==) @{Ex1Equality} (Ex1Next x) xl, (==) @{Ex1Equality} (Ex1Next xl) x) proof p
     | (False, False) = 
@@ -206,13 +206,13 @@ stratProof (MkPlays (FS FZ) [y]) (MkPlays (FS (FS FZ)) (x::[xl])) prf with ((==)
         let x1' = ex1rel1ImpliesNext y xl x1 in
         let x2 = ex1EqCorrect y x (conjunctsTrueL {a = (==) @{Ex1Equality} y x} (conjunctsTrueR {b = ((==) @{Ex1Equality} y x && True)} prf)) in
         let x3 = pairsSplitL p in
-        let test = intStratProof3 x1' x2 x3 in sym (intStratProof2 xl test)
+        let test = equalityCongruence2 x1' x2 x3 in sym (equalityReflexivity1 xl test)
     | (False, True)  = 
         let x1 = conjunctsTrueL {a = Ex1Rel1 FZ (y, xl)} prf in 
         let x1' = ex1rel1ImpliesNext y xl x1 in
         let x2 = ex1EqCorrect y x (conjunctsTrueL {a = (==) @{Ex1Equality} y x} (conjunctsTrueR {b = ((==) @{Ex1Equality} y x && True)} prf)) in
         let x3 = pairsSplitL p in
-        let test = intStratProof3 x1' x2 x3 in sym (intStratProof2 xl test)
+        let test = equalityCongruence2 x1' x2 x3 in sym (equalityReflexivity1 xl test)
     | (True, False)  = Refl
     | (True, True)   = void (ex1NoMutualNext x xl (pairsSplitL p) (pairsSplitR p))
 stratProof (MkPlays (FS (FS FZ)) (x::[xl])) (MkPlays (FS (FS FZ)) (y::[yl])) prf = 
